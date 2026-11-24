@@ -1,0 +1,2825 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>UnitWise AI — Understand Your Numbers. Improve Your Profitability.</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <script src="https://cdn.tailwindcss.com/3.4.17"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <script src="https://unpkg.com/lucide@0.460.0/dist/umd/lucide.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: { sans: ['Inter', 'system-ui', '-apple-system', 'sans-serif'] },
+          colors: {
+            navy: { 900: '#0F172A', 800: '#1E293B', 700: '#334155' },
+            brand: { 50: '#EFF6FF', 100: '#DBEAFE', 500: '#3B82F6', 600: '#2563EB', 700: '#1D4ED8' }
+          }
+        }
+      }
+    };
+  </script>
+  <style>
+    body { font-family: 'Inter', system-ui, -apple-system, sans-serif; background-color: #F8FAFC; color: #0F172A; }
+    .card { background: #FFFFFF; border: 1px solid #E2E8F0; border-radius: 0.75rem; box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04); }
+    .input-base {
+      width: 100%; border: 1px solid #CBD5E1; border-radius: 0.5rem; padding: 0.5rem 0.75rem;
+      font-size: 0.875rem; color: #0F172A; background: #FFFFFF; transition: border-color 0.15s, box-shadow 0.15s;
+    }
+    .input-base:focus { outline: none; border-color: #2563EB; box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12); }
+    .nav-item { display: flex; align-items: center; gap: 0.75rem; padding: 0.625rem 0.875rem; border-radius: 0.5rem; font-size: 0.875rem; font-weight: 500; color: #475569; transition: all 0.15s; width: 100%; text-align: left; }
+    .nav-item:hover { background: #F1F5F9; color: #0F172A; }
+    .nav-item.active { background: #EFF6FF; color: #1D4ED8; font-weight: 600; }
+    .tooltip-wrap { position: relative; display: inline-flex; align-items: center; }
+    .tooltip-wrap .tooltip-box {
+      visibility: hidden; opacity: 0; position: absolute; bottom: calc(100% + 6px); left: 50%; transform: translateX(-50%);
+      width: 220px; background: #0F172A; color: #F8FAFC; font-size: 0.75rem; line-height: 1.4; font-weight: 400;
+      padding: 0.5rem 0.625rem; border-radius: 0.5rem; z-index: 50; pointer-events: none; transition: opacity 0.15s;
+      box-shadow: 0 4px 12px rgba(15, 23, 42, 0.18); text-align: left;
+    }
+    .tooltip-wrap:hover .tooltip-box, .tooltip-wrap:focus-within .tooltip-box { visibility: visible; opacity: 1; }
+    @media print {
+      #sidebar, #mobile-drawer, #topbar, .no-print { display: none !important; }
+      #main-wrapper { margin-left: 0 !important; padding: 0 !important; }
+      body { background: #FFFFFF !important; }
+      .card { box-shadow: none !important; break-inside: avoid; }
+    }
+  </style>
+</head>
+<body class="antialiased overflow-x-hidden">
+  <!-- Mobile Drawer Overlay -->
+  <div id="mobile-overlay" class="fixed inset-0 bg-slate-900/40 z-40 hidden lg:hidden" aria-hidden="true"></div>
+
+  <!-- Sidebar (Persistent on Desktop, Drawer on Mobile) -->
+  <aside id="sidebar" class="fixed top-0 left-0 z-50 h-full w-64 bg-white border-r border-slate-200 flex flex-col transform -translate-x-full lg:translate-x-0 transition-transform duration-200 ease-in-out">
+    <div class="h-16 px-5 flex items-center justify-between border-b border-slate-200 shrink-0">
+      <div class="flex items-center gap-2.5">
+        <div class="w-8 h-8 rounded-lg bg-brand-600 flex items-center justify-center text-white font-bold text-sm shadow-sm">
+          <i data-lucide="bar-chart-3" class="w-4 h-4"></i>
+        </div>
+        <div>
+          <div class="text-sm font-bold text-slate-900 leading-tight">UnitWise AI</div>
+          <div class="text-[11px] text-slate-500 leading-tight">Unit Economics SaaS</div>
+        </div>
+      </div>
+      <button id="close-drawer-btn" class="lg:hidden p-1.5 rounded-lg text-slate-500 hover:bg-slate-100" aria-label="Close navigation">
+        <i data-lucide="x" class="w-5 h-5"></i>
+      </button>
+    </div>
+
+    <nav id="sidebar-nav" class="flex-1 overflow-y-auto px-3 py-4 space-y-1">
+      <div class="px-3 pb-1.5 text-[11px] font-semibold uppercase tracking-wider text-slate-400">Workspace</div>
+      <button class="nav-item active" data-page="overview"><i data-lucide="layout-dashboard" class="w-4 h-4 shrink-0"></i><span>Business Overview</span></button>
+      <div class="px-3 pt-3 pb-1.5 text-[11px] font-semibold uppercase tracking-wider text-slate-400">Calculators</div>
+      <button class="nav-item" data-page="education"><i data-lucide="graduation-cap" class="w-4 h-4 shrink-0"></i><span>Education Calculator</span></button>
+      <button class="nav-item" data-page="realEstate"><i data-lucide="building-2" class="w-4 h-4 shrink-0"></i><span>Real Estate Calculator</span></button>
+      <button class="nav-item" data-page="travel"><i data-lucide="plane" class="w-4 h-4 shrink-0"></i><span>Travel Agency Calculator</span></button>
+      <div class="px-3 pt-3 pb-1.5 text-[11px] font-semibold uppercase tracking-wider text-slate-400">Intelligence & Tools</div>
+      <button class="nav-item" data-page="scenarios"><i data-lucide="git-compare" class="w-4 h-4 shrink-0"></i><span>Scenario Analysis</span></button>
+      <button class="nav-item" data-page="advisor"><i data-lucide="sparkles" class="w-4 h-4 shrink-0"></i><span>AI Business Advisor</span></button>
+      <button class="nav-item" data-page="glossary"><i data-lucide="book-open" class="w-4 h-4 shrink-0"></i><span>Financial Glossary</span></button>
+      <button class="nav-item" data-page="settings"><i data-lucide="settings" class="w-4 h-4 shrink-0"></i><span>Settings</span></button>
+    </nav>
+
+    <div class="p-4 border-t border-slate-200 bg-slate-50/70 shrink-0">
+      <div class="text-xs font-medium text-slate-700">Deterministic Engine v1.0</div>
+      <div class="text-[11px] text-slate-500 mt-0.5">All formulas run locally with zero AI estimation.</div>
+    </div>
+  </aside>
+
+  <!-- Main Content Area -->
+  <div id="main-wrapper" class="lg:ml-64 min-h-screen flex flex-col">
+    <!-- Top Navigation Bar -->
+    <header id="topbar" class="sticky top-0 z-30 h-16 bg-white/95 backdrop-blur border-b border-slate-200 px-4 sm:px-6 flex items-center justify-between gap-3">
+      <div class="flex items-center gap-3 min-w-0">
+        <button id="open-drawer-btn" class="lg:hidden p-2 -ml-2 rounded-lg text-slate-600 hover:bg-slate-100" aria-label="Open navigation">
+          <i data-lucide="menu" class="w-5 h-5"></i>
+        </button>
+        <div class="min-w-0">
+          <h1 id="topbar-title" class="text-base sm:text-lg font-semibold text-slate-900 truncate">Business Overview</h1>
+          <p id="topbar-subtitle" class="text-xs text-slate-500 hidden sm:block truncate">Understand Your Numbers. Improve Your Profitability.</p>
+        </div>
+      </div>
+
+      <div class="flex items-center gap-2 sm:gap-3 shrink-0">
+        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-slate-100 text-slate-700 border border-slate-200">
+          <span class="font-semibold text-brand-600">₹</span> INR
+        </span>
+        <span id="save-status-badge" class="hidden sm:inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-emerald-50 text-emerald-700 border border-emerald-200">
+          <i data-lucide="check-circle-2" class="w-3.5 h-3.5"></i>
+          <span id="save-status-text">Saved locally</span>
+        </span>
+        <button id="topbar-reset-btn" class="hidden items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium text-slate-700 bg-white border border-slate-300 hover:bg-slate-50 transition-colors">
+          <i data-lucide="rotate-ccw" class="w-3.5 h-3.5"></i>
+          <span>Reset Defaults</span>
+        </button>
+      </div>
+    </header>
+
+    <!-- Dynamic Page Container -->
+    <main id="page-content" class="flex-1 p-4 sm:p-6 max-w-7xl w-full mx-auto space-y-6"></main>
+  </div>
+
+  <!-- Confirmation Modal (Replaces window.confirm) -->
+  <div id="confirm-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-900/50 p-4">
+    <div class="bg-white rounded-xl border border-slate-200 shadow-xl max-w-md w-full p-6 space-y-4">
+      <div class="flex items-start gap-3">
+        <div class="w-10 h-10 rounded-full bg-amber-100 text-amber-600 flex items-center justify-center shrink-0">
+          <i data-lucide="alert-triangle" class="w-5 h-5"></i>
+        </div>
+        <div>
+          <h3 id="modal-title" class="text-base font-semibold text-slate-900">Confirm Action</h3>
+          <p id="modal-message" class="text-sm text-slate-600 mt-1"></p>
+        </div>
+      </div>
+      <div class="flex justify-end gap-2.5 pt-2">
+        <button id="modal-cancel-btn" class="px-4 py-2 rounded-lg text-sm font-medium text-slate-700 bg-white border border-slate-300 hover:bg-slate-50">Cancel</button>
+        <button id="modal-confirm-btn" class="px-4 py-2 rounded-lg text-sm font-medium text-white bg-red-600 hover:bg-red-700">Confirm</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Notification -->
+  <div id="toast-container" class="fixed bottom-4 right-4 z-50 flex flex-col gap-2 pointer-events-none"></div>
+
+  <!-- ========================================================================
+       DETERMINISTIC FINANCIAL CALCULATION ENGINE (Exact Tested Module)
+       ======================================================================== -->
+  <script>
+  const UnitWiseEngine = (function () {
+    'use strict';
+
+    function safeNum(val, fallback) {
+      var n = Number(val);
+      return Number.isFinite(n) ? n : (fallback !== undefined ? fallback : 0);
+    }
+
+    function clamp(val, min, max) {
+      var n = safeNum(val, min);
+      return Math.min(Math.max(n, min), max);
+    }
+
+    function safeDiv(numerator, denominator) {
+      var num = safeNum(numerator, NaN);
+      var den = safeNum(denominator, NaN);
+      if (!Number.isFinite(num) || !Number.isFinite(den) || den === 0) return null;
+      return num / den;
+    }
+
+    function formatINR(value, decimals) {
+      if (value === null || value === undefined || !Number.isFinite(Number(value))) return 'N/A';
+      var n = Number(value);
+      var dec = decimals !== undefined ? decimals : 0;
+      var sign = n < 0 ? '-' : '';
+      var abs = Math.abs(n);
+      var formatted = new Intl.NumberFormat('en-IN', {
+        minimumFractionDigits: dec,
+        maximumFractionDigits: dec
+      }).format(abs);
+      return sign + '₹' + formatted;
+    }
+
+    function formatPct(value, decimals) {
+      if (value === null || value === undefined || !Number.isFinite(Number(value))) return 'N/A';
+      var dec = decimals !== undefined ? decimals : 1;
+      return Number(value).toFixed(dec) + '%';
+    }
+
+    function formatCount(value, decimals) {
+      if (value === null || value === undefined || !Number.isFinite(Number(value))) return 'N/A';
+      var dec = decimals !== undefined ? decimals : 0;
+      return new Intl.NumberFormat('en-IN', {
+        minimumFractionDigits: dec,
+        maximumFractionDigits: dec
+      }).format(Number(value));
+    }
+
+    function computeOutputTax(baseAmount, gstRatePct, priceMode) {
+      var base = Math.max(0, safeNum(baseAmount, 0));
+      var rate = clamp(gstRatePct, 0, 100) / 100;
+      if (priceMode === 'GST_INCLUSIVE') {
+        var netRevenue = rate > 0 ? base / (1 + rate) : base;
+        var gstCollected = base - netRevenue;
+        return { netRevenue: netRevenue, gstCollected: gstCollected, grossCollections: base };
+      }
+      var gst = base * rate;
+      return { netRevenue: base, gstCollected: gst, grossCollections: base + gst };
+    }
+
+    function applyExpenseTax(baseExpense, gstRatePct, isEligible, gstCreditTreatment) {
+      var base = Math.max(0, safeNum(baseExpense, 0));
+      var rate = clamp(gstRatePct, 0, 100) / 100;
+      if (!isEligible || rate <= 0) {
+        return { effectiveExpense: base, recoverableItc: 0, nonRecoverableGst: 0 };
+      }
+      var taxAmount = base * rate;
+      if (gstCreditTreatment === 'NON_RECOVERABLE') {
+        return { effectiveExpense: base + taxAmount, recoverableItc: 0, nonRecoverableGst: taxAmount };
+      }
+      return { effectiveExpense: base, recoverableItc: taxAmount, nonRecoverableGst: 0 };
+    }
+
+    function computeBreakEven(totalFixedExpenses, contributionPerUnit) {
+      var fixed = Math.max(0, safeNum(totalFixedExpenses, 0));
+      if (contributionPerUnit === null || !Number.isFinite(contributionPerUnit) || contributionPerUnit <= 0) {
+        return {
+          achievable: false,
+          units: null,
+          message: 'Break-even not achievable under current assumptions.'
+        };
+      }
+      if (fixed === 0) {
+        return { achievable: true, units: 0, message: 'No fixed overhead — profitable from the first unit.' };
+      }
+      return { achievable: true, units: Math.ceil(fixed / contributionPerUnit), message: null };
+    }
+
+    function computeOptionalIncomeTax(operatingProfit, includeIncomeTax, incomeTaxRatePct) {
+      var rate = clamp(incomeTaxRatePct, 0, 100) / 100;
+      if (!includeIncomeTax || rate <= 0) {
+        return { enabled: !!includeIncomeTax, ratePct: clamp(incomeTaxRatePct, 0, 100), estimatedIncomeTax: 0, postTaxProfit: operatingProfit };
+      }
+      var tax = operatingProfit > 0 ? operatingProfit * rate : 0;
+      return { enabled: true, ratePct: clamp(incomeTaxRatePct, 0, 100), estimatedIncomeTax: tax, postTaxProfit: operatingProfit - tax };
+    }
+
+    var DEFAULT_EDUCATION_INPUTS = {
+      courseFee: 25000, enrolledStudents: 30, discountPct: 0, refundPct: 0, priceMode: 'GST_EXCLUSIVE',
+      gstRatePct: 18, gstCreditTreatment: 'RECOVERABLE',
+      expenseGstEligible: { lms: true, gateway: true, trainer: false, sales: false, marketing: true, otherVariable: false, fixed: false },
+      lmsCost: 2500, lmsBasis: 'PER_STUDENT',
+      gatewayFee: 750, gatewayBasis: 'FIXED_PER_STUDENT',
+      trainerCost: 5000, trainerBasis: 'PER_STUDENT',
+      salesCommission: 2500, salesBasis: 'FIXED_PER_STUDENT',
+      otherVariablePerStudent: 0,
+      totalAdSpend: 150000, totalLeads: 300, attributedStudents: 30, additionalMarketingPerStudent: 0,
+      batchOverhead: 30000, otherFixedExpenses: 0,
+      includeIncomeTax: false, incomeTaxRatePct: 25, targetMarginPct: 15
+    };
+
+    var DEFAULT_REAL_ESTATE_INPUTS = {
+      avgPropertyValue: 6000000, brokerageRatePct: 2, fixedRevenuePerDeal: 120000, revenueMethod: 'PROPERTY_X_BROKERAGE',
+      gstRatePct: 18, priceMode: 'GST_EXCLUSIVE', gstCreditTreatment: 'RECOVERABLE',
+      expenseGstEligible: { marketing: true, sales: false, otherVariable: false, fixed: false },
+      totalLeads: 300, qualifiedLeads: 90, siteVisits: 15, bookings: 5, grossClosedDeals: 3, cancellationRatePct: 0,
+      totalAdSpend: 60000, additionalMarketingCosts: 0,
+      salesCostPerNetDeal: 20000, otherVariableCostPerNetDeal: 5000, monthlyFixedOverhead: 45000, otherFixedExpenses: 0,
+      includeIncomeTax: false, incomeTaxRatePct: 25, targetMarginPct: 15
+    };
+
+    var DEFAULT_TRAVEL_INPUTS = {
+      sellingPricePerTraveler: 35000, travelers: 20, bookings: 10, revenueModel: 'GROSS_PACKAGE',
+      partnerCommissionRatePct: 15, cancellationRatePct: 0,
+      gstRatePct: 5, priceMode: 'GST_EXCLUSIVE', gstCreditTreatment: 'RECOVERABLE',
+      expenseGstEligible: { supplier: false, gateway: true, marketing: true, otherVariable: false, fixed: false },
+      hotelSupplierCostPerTraveler: 18000, transportCostPerTraveler: 5000, mealCostPerTraveler: 2000,
+      otherSupplierExpenses: 0, otherVariableCostPerTraveler: 2000,
+      gatewayFee: 0, gatewayBasis: 'PCT_OF_COLLECTION',
+      totalAdSpend: 60000, totalEnquiries: 200, attributedBookings: 10,
+      fixedTripOverhead: 20000, monthlyOperationalOverhead: 15000, otherFixedExpenses: 0,
+      includeIncomeTax: false, incomeTaxRatePct: 25, targetMarginPct: 10
+    };
+
+    function calculateEducation(rawInputs) {
+      var inp = Object.assign({}, DEFAULT_EDUCATION_INPUTS, rawInputs || {});
+      var elig = Object.assign({}, DEFAULT_EDUCATION_INPUTS.expenseGstEligible, inp.expenseGstEligible || {});
+
+      var courseFee = Math.max(0, safeNum(inp.courseFee, 0));
+      var enrolledStudents = Math.max(0, safeNum(inp.enrolledStudents, 0));
+      var discountPct = clamp(inp.discountPct, 0, 100);
+      var refundPct = clamp(inp.refundPct, 0, 100);
+      var gstRatePct = clamp(inp.gstRatePct, 0, 100);
+      var totalAdSpend = Math.max(0, safeNum(inp.totalAdSpend, 0));
+      var totalLeads = Math.max(0, safeNum(inp.totalLeads, 0));
+      var attributedStudents = Math.max(0, safeNum(inp.attributedStudents, 0));
+
+      var grossBeforeAdjustments = courseFee * enrolledStudents;
+      var discountAmount = grossBeforeAdjustments * (discountPct / 100);
+      var afterDiscount = grossBeforeAdjustments - discountAmount;
+      var refundAmount = afterDiscount * (refundPct / 100);
+      var refundedStudents = enrolledStudents * (refundPct / 100);
+      var netStudents = Math.max(0, enrolledStudents - refundedStudents);
+      var collectionsBase = afterDiscount - refundAmount;
+
+      var taxRes = computeOutputTax(collectionsBase, gstRatePct, inp.priceMode);
+      var netRevenue = taxRes.netRevenue;
+      var gstCollected = taxRes.gstCollected;
+      var grossCustomerCollections = taxRes.grossCollections;
+      var netRevenuePerStudent = safeDiv(netRevenue, netStudents);
+
+      var waterfallGrossCollections = inp.priceMode === 'GST_INCLUSIVE'
+        ? grossBeforeAdjustments : grossBeforeAdjustments * (1 + gstRatePct / 100);
+      var waterfallDiscountsAndRefunds = inp.priceMode === 'GST_INCLUSIVE'
+        ? (discountAmount + refundAmount) : (discountAmount + refundAmount) * (1 + gstRatePct / 100);
+
+      var lmsBase = inp.lmsBasis === 'PER_BATCH' ? Math.max(0, safeNum(inp.lmsCost, 0)) : Math.max(0, safeNum(inp.lmsCost, 0)) * netStudents;
+      var trainerBase = inp.trainerBasis === 'PER_BATCH' ? Math.max(0, safeNum(inp.trainerCost, 0)) : Math.max(0, safeNum(inp.trainerCost, 0)) * netStudents;
+      var gatewayBase = inp.gatewayBasis === 'PCT_OF_COLLECTION'
+        ? grossCustomerCollections * (clamp(inp.gatewayFee, 0, 100) / 100)
+        : Math.max(0, safeNum(inp.gatewayFee, 0)) * netStudents;
+
+      var lmsTax = applyExpenseTax(lmsBase, gstRatePct, elig.lms, inp.gstCreditTreatment);
+      var trainerTax = applyExpenseTax(trainerBase, gstRatePct, elig.trainer, inp.gstCreditTreatment);
+      var gatewayTax = applyExpenseTax(gatewayBase, gstRatePct, elig.gateway, inp.gstCreditTreatment);
+
+      var lmsExpenses = lmsTax.effectiveExpense;
+      var trainerExpenses = trainerTax.effectiveExpense;
+      var gatewayExpenses = gatewayTax.effectiveExpense;
+      var directDeliveryCosts = lmsExpenses + trainerExpenses + gatewayExpenses;
+      var grossProfit = netRevenue - directDeliveryCosts;
+
+      var salesBase = inp.salesBasis === 'PCT_OF_REVENUE'
+        ? netRevenue * (clamp(inp.salesCommission, 0, 100) / 100)
+        : Math.max(0, safeNum(inp.salesCommission, 0)) * netStudents;
+      var adSpendBase = totalAdSpend;
+      var addlMktgBase = Math.max(0, safeNum(inp.additionalMarketingPerStudent, 0)) * netStudents;
+      var otherVarBase = Math.max(0, safeNum(inp.otherVariablePerStudent, 0)) * netStudents;
+
+      var salesTax = applyExpenseTax(salesBase, gstRatePct, elig.sales, inp.gstCreditTreatment);
+      var adSpendTax = applyExpenseTax(adSpendBase, gstRatePct, elig.marketing, inp.gstCreditTreatment);
+      var addlMktgTax = applyExpenseTax(addlMktgBase, gstRatePct, elig.marketing, inp.gstCreditTreatment);
+      var otherVarTax = applyExpenseTax(otherVarBase, gstRatePct, elig.otherVariable, inp.gstCreditTreatment);
+
+      var salesCommissionExpense = salesTax.effectiveExpense;
+      var marketingExpenses = adSpendTax.effectiveExpense + addlMktgTax.effectiveExpense;
+      var otherVariableExpenses = otherVarTax.effectiveExpense;
+      var variableSalesAndAcqCosts = salesCommissionExpense + marketingExpenses + otherVariableExpenses;
+
+      var totalVariableExpenses = directDeliveryCosts + variableSalesAndAcqCosts;
+      var totalContribution = grossProfit - variableSalesAndAcqCosts;
+      var contributionPerStudent = safeDiv(totalContribution, netStudents);
+      var contributionMarginPct = safeDiv(totalContribution, netRevenue) !== null ? safeDiv(totalContribution, netRevenue) * 100 : null;
+
+      var fixedBase = Math.max(0, safeNum(inp.batchOverhead, 0)) + Math.max(0, safeNum(inp.otherFixedExpenses, 0));
+      var fixedTax = applyExpenseTax(fixedBase, gstRatePct, elig.fixed, inp.gstCreditTreatment);
+      var totalFixedExpenses = fixedTax.effectiveExpense;
+
+      var totalExpenses = totalVariableExpenses + totalFixedExpenses;
+      var operatingProfit = totalContribution - totalFixedExpenses;
+      var profitPerStudent = safeDiv(operatingProfit, netStudents);
+      var profitMarginPct = safeDiv(operatingProfit, netRevenue) !== null ? safeDiv(operatingProfit, netRevenue) * 100 : null;
+
+      var cpl = safeDiv(totalAdSpend, totalLeads);
+      var marketingCac = safeDiv(totalAdSpend, attributedStudents);
+      var leadToStudentPct = safeDiv(attributedStudents, totalLeads) !== null ? safeDiv(attributedStudents, totalLeads) * 100 : null;
+      var breakEven = computeBreakEven(totalFixedExpenses, contributionPerStudent);
+
+      var totalRecoverableItc = lmsTax.recoverableItc + trainerTax.recoverableItc + gatewayTax.recoverableItc +
+        salesTax.recoverableItc + adSpendTax.recoverableItc + addlMktgTax.recoverableItc + otherVarTax.recoverableItc + fixedTax.recoverableItc;
+      var totalNonRecoverableGst = lmsTax.nonRecoverableGst + trainerTax.nonRecoverableGst + gatewayTax.nonRecoverableGst +
+        salesTax.nonRecoverableGst + adSpendTax.nonRecoverableGst + addlMktgTax.nonRecoverableGst + otherVarTax.nonRecoverableGst + fixedTax.nonRecoverableGst;
+      var netGstPayable = Math.max(0, gstCollected - totalRecoverableItc);
+      var incomeTax = computeOptionalIncomeTax(operatingProfit, inp.includeIncomeTax, inp.incomeTaxRatePct);
+
+      var warnings = [];
+      if (enrolledStudents === 0) warnings.push({ level: 'info', text: 'Enrolled students is 0. Enter enrollment volume to compute per-student economics.' });
+      if (attributedStudents > enrolledStudents && enrolledStudents > 0) warnings.push({ level: 'amber', text: 'Attributed paying students (' + attributedStudents + ') exceeds enrolled students (' + enrolledStudents + ').' });
+      if (totalAdSpend > 0 && totalLeads === 0) warnings.push({ level: 'amber', text: 'Advertising spend is entered without lead counts — CPL is N/A.' });
+      if (totalAdSpend > 0 && attributedStudents === 0) warnings.push({ level: 'amber', text: 'Advertising spend is entered without attributed paying students — Marketing CAC is N/A.' });
+      if (netStudents > 0 && operatingProfit < 0) warnings.push({ level: 'red', text: 'Business is operating at a loss of ' + formatINR(Math.abs(operatingProfit)) + '.' });
+      if (contributionPerStudent !== null && contributionPerStudent <= 0) warnings.push({ level: 'red', text: 'Contribution per student is non-positive (' + formatINR(contributionPerStudent) + '). Break-even is not achievable.' });
+      if (marketingCac !== null && contributionPerStudent !== null && marketingCac > contributionPerStudent && contributionPerStudent > 0) warnings.push({ level: 'amber', text: 'Marketing CAC (' + formatINR(marketingCac) + ') exceeds contribution per student (' + formatINR(contributionPerStudent) + ').' });
+      if (breakEven.achievable && breakEven.units !== null && netStudents > 0 && breakEven.units > netStudents) warnings.push({ level: 'amber', text: 'Break-even enrollment (' + breakEven.units + ' students) exceeds current net enrollment (' + formatCount(netStudents, 1) + ').' });
+      if (netRevenue > 0 && (marketingExpenses / netRevenue) > 0.35) warnings.push({ level: 'amber', text: 'Marketing expenses consume ' + formatPct((marketingExpenses / netRevenue) * 100) + ' of net revenue.' });
+      if (profitMarginPct !== null && profitMarginPct >= 0 && profitMarginPct < safeNum(inp.targetMarginPct, 15)) warnings.push({ level: 'amber', text: 'Operating profit margin (' + formatPct(profitMarginPct) + ') is below your ' + safeNum(inp.targetMarginPct, 15) + '% target threshold.' });
+
+      return {
+        industry: 'education', label: 'Education', unitLabel: 'student', unitLabelPlural: 'students', inputs: inp,
+        enrolledStudents: enrolledStudents, refundedStudents: refundedStudents, netUnits: netStudents,
+        grossCustomerCollections: grossCustomerCollections, grossBeforeAdjustments: grossBeforeAdjustments,
+        discounts: discountAmount, refundAmount: refundAmount, netRevenue: netRevenue, gstCollected: gstCollected,
+        netRevenuePerUnit: netRevenuePerStudent,
+        lmsExpenses: lmsExpenses, gatewayExpenses: gatewayExpenses, trainerExpenses: trainerExpenses,
+        directFulfillmentCosts: directDeliveryCosts, salesCommissionExpense: salesCommissionExpense,
+        marketingExpenses: marketingExpenses, otherVariableExpenses: otherVariableExpenses,
+        variableSalesAndAcqCosts: variableSalesAndAcqCosts, totalVariableExpenses: totalVariableExpenses,
+        totalFixedExpenses: totalFixedExpenses, totalExpenses: totalExpenses,
+        grossProfit: grossProfit, totalContribution: totalContribution, contributionPerUnit: contributionPerStudent,
+        contributionMarginPct: contributionMarginPct, operatingProfit: operatingProfit, profitPerUnit: profitPerStudent,
+        profitMarginPct: profitMarginPct, cpl: cpl, marketingCac: marketingCac, conversionRatePct: leadToStudentPct,
+        breakEven: breakEven,
+        taxSummary: {
+          gstRatePct: gstRatePct, priceMode: inp.priceMode, gstCreditTreatment: inp.gstCreditTreatment,
+          gstCollected: gstCollected, recoverableItc: totalRecoverableItc, nonRecoverableGst: totalNonRecoverableGst, netGstPayable: netGstPayable
+        },
+        incomeTax: incomeTax,
+        expenseCategories: [
+          { key: 'fulfillment', label: 'Fulfillment & Delivery (LMS, Trainer, Gateway)', amount: directDeliveryCosts },
+          { key: 'marketing', label: 'Marketing & Advertising', amount: marketingExpenses },
+          { key: 'sales', label: 'Sales Commissions', amount: salesCommissionExpense },
+          { key: 'otherVariable', label: 'Other Variable Expenses', amount: otherVariableExpenses },
+          { key: 'fixed', label: 'Fixed Batch & Operational Overhead', amount: totalFixedExpenses }
+        ],
+        waterfall: [
+          { label: 'Gross Billed', value: waterfallGrossCollections, type: 'total' },
+          { label: 'Disc. & Refunds', value: -waterfallDiscountsAndRefunds, type: 'negative' },
+          { label: 'GST Collected', value: -gstCollected, type: 'negative' },
+          { label: 'Net Revenue', value: netRevenue, type: 'subtotal' },
+          { label: 'Direct Delivery', value: -directDeliveryCosts, type: 'negative' },
+          { label: 'Gross Profit', value: grossProfit, type: 'subtotal' },
+          { label: 'Sales & Mktg', value: -variableSalesAndAcqCosts, type: 'negative' },
+          { label: 'Contribution', value: totalContribution, type: 'subtotal' },
+          { label: 'Fixed Overhead', value: -totalFixedExpenses, type: 'negative' },
+          { label: 'Operating Profit', value: operatingProfit, type: 'final' }
+        ],
+        warnings: warnings
+      };
+    }
+
+    function calculateRealEstate(rawInputs) {
+      var inp = Object.assign({}, DEFAULT_REAL_ESTATE_INPUTS, rawInputs || {});
+      var elig = Object.assign({}, DEFAULT_REAL_ESTATE_INPUTS.expenseGstEligible, inp.expenseGstEligible || {});
+
+      var avgPropertyValue = Math.max(0, safeNum(inp.avgPropertyValue, 0));
+      var brokerageRatePct = clamp(inp.brokerageRatePct, 0, 100);
+      var fixedRevenuePerDeal = Math.max(0, safeNum(inp.fixedRevenuePerDeal, 0));
+      var gstRatePct = clamp(inp.gstRatePct, 0, 100);
+
+      var totalLeads = Math.max(0, safeNum(inp.totalLeads, 0));
+      var qualifiedLeads = Math.max(0, safeNum(inp.qualifiedLeads, 0));
+      var siteVisits = Math.max(0, safeNum(inp.siteVisits, 0));
+      var bookings = Math.max(0, safeNum(inp.bookings, 0));
+      var grossClosedDeals = Math.max(0, safeNum(inp.grossClosedDeals, 0));
+      var cancellationRatePct = clamp(inp.cancellationRatePct, 0, 100);
+      var totalAdSpend = Math.max(0, safeNum(inp.totalAdSpend, 0));
+      var additionalMarketingCosts = Math.max(0, safeNum(inp.additionalMarketingCosts, 0));
+
+      var brokerageRevenuePerDealGross = inp.revenueMethod === 'FIXED_PER_DEAL'
+        ? fixedRevenuePerDeal : avgPropertyValue * (brokerageRatePct / 100);
+
+      var cancelledDeals = grossClosedDeals * (cancellationRatePct / 100);
+      var netClosedDeals = Math.max(0, grossClosedDeals - cancelledDeals);
+      var grossPropertyTransactionValue = avgPropertyValue * netClosedDeals;
+
+      var grossAgencyBeforeCancel = brokerageRevenuePerDealGross * grossClosedDeals;
+      var cancelledRevenueAmount = brokerageRevenuePerDealGross * cancelledDeals;
+      var collectionsBase = brokerageRevenuePerDealGross * netClosedDeals;
+
+      var taxRes = computeOutputTax(collectionsBase, gstRatePct, inp.priceMode);
+      var netRevenue = taxRes.netRevenue;
+      var gstCollected = taxRes.gstCollected;
+      var agencyCollections = taxRes.grossCollections;
+      var revenuePerClosedDeal = safeDiv(netRevenue, netClosedDeals);
+
+      var waterfallGrossCollections = inp.priceMode === 'GST_INCLUSIVE'
+        ? grossAgencyBeforeCancel : grossAgencyBeforeCancel * (1 + gstRatePct / 100);
+      var waterfallCancellations = inp.priceMode === 'GST_INCLUSIVE'
+        ? cancelledRevenueAmount : cancelledRevenueAmount * (1 + gstRatePct / 100);
+
+      var cpl = safeDiv(totalAdSpend, totalLeads);
+      var costPerQualifiedLead = safeDiv(totalAdSpend, qualifiedLeads);
+      var costPerSiteVisit = safeDiv(totalAdSpend, siteVisits);
+      var leadToQualifiedPct = safeDiv(qualifiedLeads, totalLeads) !== null ? safeDiv(qualifiedLeads, totalLeads) * 100 : null;
+      var leadToSiteVisitPct = safeDiv(siteVisits, totalLeads) !== null ? safeDiv(siteVisits, totalLeads) * 100 : null;
+      var leadToClosePct = safeDiv(netClosedDeals, totalLeads) !== null ? safeDiv(netClosedDeals, totalLeads) * 100 : null;
+      var bookingToClosePct = safeDiv(netClosedDeals, bookings) !== null ? safeDiv(netClosedDeals, bookings) * 100 : null;
+      var marketingCac = safeDiv(totalAdSpend, netClosedDeals);
+
+      var otherVarBase = Math.max(0, safeNum(inp.otherVariableCostPerNetDeal, 0)) * netClosedDeals;
+      var salesBase = Math.max(0, safeNum(inp.salesCostPerNetDeal, 0)) * netClosedDeals;
+      var adSpendBase = totalAdSpend;
+      var addlMktgBase = additionalMarketingCosts;
+      var fixedBase = Math.max(0, safeNum(inp.monthlyFixedOverhead, 0)) + Math.max(0, safeNum(inp.otherFixedExpenses, 0));
+
+      var otherVarTax = applyExpenseTax(otherVarBase, gstRatePct, elig.otherVariable, inp.gstCreditTreatment);
+      var salesTax = applyExpenseTax(salesBase, gstRatePct, elig.sales, inp.gstCreditTreatment);
+      var adSpendTax = applyExpenseTax(adSpendBase, gstRatePct, elig.marketing, inp.gstCreditTreatment);
+      var addlMktgTax = applyExpenseTax(addlMktgBase, gstRatePct, elig.marketing, inp.gstCreditTreatment);
+      var fixedTax = applyExpenseTax(fixedBase, gstRatePct, elig.fixed, inp.gstCreditTreatment);
+
+      var directFulfillmentCosts = otherVarTax.effectiveExpense;
+      var salesExpenses = salesTax.effectiveExpense;
+      var marketingExpenses = adSpendTax.effectiveExpense + addlMktgTax.effectiveExpense;
+      var variableSalesAndAcqCosts = salesExpenses + marketingExpenses;
+      var totalVariableExpenses = directFulfillmentCosts + variableSalesAndAcqCosts;
+      var totalFixedExpenses = fixedTax.effectiveExpense;
+      var totalExpenses = totalVariableExpenses + totalFixedExpenses;
+
+      var grossProfit = netRevenue - directFulfillmentCosts;
+      var totalContribution = grossProfit - variableSalesAndAcqCosts;
+      var contributionPerDeal = safeDiv(totalContribution, netClosedDeals);
+      var contributionMarginPct = safeDiv(totalContribution, netRevenue) !== null ? safeDiv(totalContribution, netRevenue) * 100 : null;
+      var operatingProfit = totalContribution - totalFixedExpenses;
+      var profitPerDeal = safeDiv(operatingProfit, netClosedDeals);
+      var profitMarginPct = safeDiv(operatingProfit, netRevenue) !== null ? safeDiv(operatingProfit, netRevenue) * 100 : null;
+      var breakEven = computeBreakEven(totalFixedExpenses, contributionPerDeal);
+
+      var totalRecoverableItc = otherVarTax.recoverableItc + salesTax.recoverableItc + adSpendTax.recoverableItc + addlMktgTax.recoverableItc + fixedTax.recoverableItc;
+      var totalNonRecoverableGst = otherVarTax.nonRecoverableGst + salesTax.nonRecoverableGst + adSpendTax.nonRecoverableGst + addlMktgTax.nonRecoverableGst + fixedTax.nonRecoverableGst;
+      var netGstPayable = Math.max(0, gstCollected - totalRecoverableItc);
+      var incomeTax = computeOptionalIncomeTax(operatingProfit, inp.includeIncomeTax, inp.incomeTaxRatePct);
+
+      var warnings = [];
+      if (totalLeads > 0 && qualifiedLeads > totalLeads) warnings.push({ level: 'amber', text: 'Qualified leads (' + qualifiedLeads + ') exceeds total leads (' + totalLeads + '). Check funnel stages.' });
+      if (qualifiedLeads > 0 && siteVisits > qualifiedLeads) warnings.push({ level: 'amber', text: 'Site visits (' + siteVisits + ') exceeds qualified leads (' + qualifiedLeads + ').' });
+      if (bookings > 0 && grossClosedDeals > bookings) warnings.push({ level: 'amber', text: 'Gross closed deals (' + grossClosedDeals + ') exceeds bookings (' + bookings + ').' });
+      if (totalAdSpend > 0 && totalLeads === 0) warnings.push({ level: 'amber', text: 'Advertising spend entered without leads — CPL is N/A.' });
+      if (netClosedDeals === 0) warnings.push({ level: 'info', text: 'Net closed deals is 0. Per-deal unit economics and CAC are N/A.' });
+      if (netClosedDeals > 0 && operatingProfit < 0) warnings.push({ level: 'red', text: 'Agency is operating at a loss of ' + formatINR(Math.abs(operatingProfit)) + '.' });
+      if (contributionPerDeal !== null && contributionPerDeal <= 0) warnings.push({ level: 'red', text: 'Contribution per deal is non-positive (' + formatINR(contributionPerDeal) + '). Break-even is not achievable.' });
+      if (marketingCac !== null && contributionPerDeal !== null && marketingCac > contributionPerDeal && contributionPerDeal > 0) warnings.push({ level: 'amber', text: 'Marketing CAC (' + formatINR(marketingCac) + ') exceeds contribution per deal (' + formatINR(contributionPerDeal) + ').' });
+      if (breakEven.achievable && breakEven.units !== null && netClosedDeals > 0 && breakEven.units > netClosedDeals) warnings.push({ level: 'amber', text: 'Break-even volume (' + breakEven.units + ' deals) exceeds current net closed deals (' + formatCount(netClosedDeals, 1) + ').' });
+      if (netRevenue > 0 && (marketingExpenses / netRevenue) > 0.35) warnings.push({ level: 'amber', text: 'Marketing spend represents ' + formatPct((marketingExpenses / netRevenue) * 100) + ' of net brokerage revenue.' });
+      if (profitMarginPct !== null && profitMarginPct >= 0 && profitMarginPct < safeNum(inp.targetMarginPct, 15)) warnings.push({ level: 'amber', text: 'Operating profit margin (' + formatPct(profitMarginPct) + ') is below your ' + safeNum(inp.targetMarginPct, 15) + '% threshold.' });
+
+      return {
+        industry: 'realEstate', label: 'Real Estate', unitLabel: 'deal', unitLabelPlural: 'deals', inputs: inp,
+        grossPropertyTransactionValue: grossPropertyTransactionValue, brokerageRevenuePerDealGross: brokerageRevenuePerDealGross,
+        grossClosedDeals: grossClosedDeals, cancelledDeals: cancelledDeals, netUnits: netClosedDeals, netClosedDeals: netClosedDeals,
+        grossCustomerCollections: agencyCollections, cancelledRevenueAmount: cancelledRevenueAmount,
+        netRevenue: netRevenue, gstCollected: gstCollected, netRevenuePerUnit: revenuePerClosedDeal,
+        cpl: cpl, costPerQualifiedLead: costPerQualifiedLead, costPerSiteVisit: costPerSiteVisit,
+        leadToQualifiedPct: leadToQualifiedPct, leadToSiteVisitPct: leadToSiteVisitPct, leadToClosePct: leadToClosePct,
+        bookingToClosePct: bookingToClosePct, conversionRatePct: leadToClosePct, marketingCac: marketingCac,
+        directFulfillmentCosts: directFulfillmentCosts, salesExpenses: salesExpenses, marketingExpenses: marketingExpenses,
+        otherVariableExpenses: 0, variableSalesAndAcqCosts: variableSalesAndAcqCosts, totalVariableExpenses: totalVariableExpenses,
+        totalFixedExpenses: totalFixedExpenses, totalExpenses: totalExpenses,
+        grossProfit: grossProfit, totalContribution: totalContribution, contributionPerUnit: contributionPerDeal,
+        contributionMarginPct: contributionMarginPct, operatingProfit: operatingProfit, profitPerUnit: profitPerDeal,
+        profitMarginPct: profitMarginPct, breakEven: breakEven,
+        taxSummary: {
+          gstRatePct: gstRatePct, priceMode: inp.priceMode, gstCreditTreatment: inp.gstCreditTreatment,
+          gstCollected: gstCollected, recoverableItc: totalRecoverableItc, nonRecoverableGst: totalNonRecoverableGst, netGstPayable: netGstPayable
+        },
+        incomeTax: incomeTax,
+        expenseCategories: [
+          { key: 'fulfillment', label: 'Deal Fulfillment & Closing Costs', amount: directFulfillmentCosts },
+          { key: 'marketing', label: 'Marketing & Advertising', amount: marketingExpenses },
+          { key: 'sales', label: 'Sales Commissions & Team Costs', amount: salesExpenses },
+          { key: 'otherVariable', label: 'Other Variable Expenses', amount: 0 },
+          { key: 'fixed', label: 'Monthly Fixed Overhead', amount: totalFixedExpenses }
+        ],
+        waterfall: [
+          { label: 'Gross Brokerage', value: waterfallGrossCollections, type: 'total' },
+          { label: 'Cancellations', value: -waterfallCancellations, type: 'negative' },
+          { label: 'GST Collected', value: -gstCollected, type: 'negative' },
+          { label: 'Net Revenue', value: netRevenue, type: 'subtotal' },
+          { label: 'Deal Fulfillment', value: -directFulfillmentCosts, type: 'negative' },
+          { label: 'Gross Profit', value: grossProfit, type: 'subtotal' },
+          { label: 'Sales & Mktg', value: -variableSalesAndAcqCosts, type: 'negative' },
+          { label: 'Contribution', value: totalContribution, type: 'subtotal' },
+          { label: 'Fixed Overhead', value: -totalFixedExpenses, type: 'negative' },
+          { label: 'Operating Profit', value: operatingProfit, type: 'final' }
+        ],
+        warnings: warnings
+      };
+    }
+
+    function calculateTravel(rawInputs) {
+      var inp = Object.assign({}, DEFAULT_TRAVEL_INPUTS, rawInputs || {});
+      var elig = Object.assign({}, DEFAULT_TRAVEL_INPUTS.expenseGstEligible, inp.expenseGstEligible || {});
+
+      var sellingPrice = Math.max(0, safeNum(inp.sellingPricePerTraveler, 0));
+      var travelers = Math.max(0, safeNum(inp.travelers, 0));
+      var bookings = Math.max(0, safeNum(inp.bookings, 0));
+      var partnerCommissionRatePct = clamp(inp.partnerCommissionRatePct, 0, 100);
+      var cancellationRatePct = clamp(inp.cancellationRatePct, 0, 100);
+      var gstRatePct = clamp(inp.gstRatePct, 0, 100);
+      var totalAdSpend = Math.max(0, safeNum(inp.totalAdSpend, 0));
+      var totalEnquiries = Math.max(0, safeNum(inp.totalEnquiries, 0));
+      var attributedBookings = Math.max(0, safeNum(inp.attributedBookings, 0));
+
+      var cancelledBookings = bookings * (cancellationRatePct / 100);
+      var netBookings = Math.max(0, bookings - cancelledBookings);
+      var cancelledTravelers = travelers * (cancellationRatePct / 100);
+      var netTravelers = Math.max(0, travelers - cancelledTravelers);
+
+      var grossBookingValueBeforeCancel = sellingPrice * travelers;
+      var grossPackageValueNetOfCancel = sellingPrice * netTravelers;
+      var isCommissionOnly = inp.revenueModel === 'COMMISSION_ONLY';
+
+      var recognizedBaseBeforeCancel = isCommissionOnly ? grossBookingValueBeforeCancel * (partnerCommissionRatePct / 100) : grossBookingValueBeforeCancel;
+      var recognizedBase = isCommissionOnly ? grossPackageValueNetOfCancel * (partnerCommissionRatePct / 100) : grossPackageValueNetOfCancel;
+      var cancelledRevenueImpact = recognizedBaseBeforeCancel - recognizedBase;
+      var supplierPassThrough = isCommissionOnly ? (grossPackageValueNetOfCancel - recognizedBase) : 0;
+
+      var taxRes = computeOutputTax(recognizedBase, gstRatePct, inp.priceMode);
+      var netRevenue = taxRes.netRevenue;
+      var gstCollected = taxRes.gstCollected;
+      var grossCustomerCollections = taxRes.grossCollections;
+      var netRevenuePerTraveler = safeDiv(netRevenue, netTravelers);
+
+      var waterfallGrossCollections = inp.priceMode === 'GST_INCLUSIVE'
+        ? recognizedBaseBeforeCancel : recognizedBaseBeforeCancel * (1 + gstRatePct / 100);
+      var waterfallCancellations = inp.priceMode === 'GST_INCLUSIVE'
+        ? cancelledRevenueImpact : cancelledRevenueImpact * (1 + gstRatePct / 100);
+
+      var hotelCostBase = isCommissionOnly ? 0 : Math.max(0, safeNum(inp.hotelSupplierCostPerTraveler, 0)) * netTravelers;
+      var transportCostBase = isCommissionOnly ? 0 : Math.max(0, safeNum(inp.transportCostPerTraveler, 0)) * netTravelers;
+      var mealCostBase = isCommissionOnly ? 0 : Math.max(0, safeNum(inp.mealCostPerTraveler, 0)) * netTravelers;
+      var otherSupplierBase = isCommissionOnly ? 0 : Math.max(0, safeNum(inp.otherSupplierExpenses, 0));
+      var supplierBaseTotal = hotelCostBase + transportCostBase + mealCostBase + otherSupplierBase;
+
+      var gatewayBase = inp.gatewayBasis === 'PCT_OF_COLLECTION'
+        ? grossCustomerCollections * (clamp(inp.gatewayFee, 0, 100) / 100)
+        : Math.max(0, safeNum(inp.gatewayFee, 0)) * netTravelers;
+
+      var supplierTax = applyExpenseTax(supplierBaseTotal, gstRatePct, elig.supplier, inp.gstCreditTreatment);
+      var gatewayTax = applyExpenseTax(gatewayBase, gstRatePct, elig.gateway, inp.gstCreditTreatment);
+      var supplierFulfillmentCost = supplierTax.effectiveExpense;
+      var gatewayExpenses = gatewayTax.effectiveExpense;
+      var directFulfillmentCosts = supplierFulfillmentCost + gatewayExpenses;
+      var grossProfit = netRevenue - directFulfillmentCosts;
+
+      var otherVarBase = Math.max(0, safeNum(inp.otherVariableCostPerTraveler, 0)) * netTravelers;
+      var adSpendBase = totalAdSpend;
+      var fixedBase = Math.max(0, safeNum(inp.fixedTripOverhead, 0)) +
+        Math.max(0, safeNum(inp.monthlyOperationalOverhead, 0)) + Math.max(0, safeNum(inp.otherFixedExpenses, 0));
+
+      var otherVarTax = applyExpenseTax(otherVarBase, gstRatePct, elig.otherVariable, inp.gstCreditTreatment);
+      var adSpendTax = applyExpenseTax(adSpendBase, gstRatePct, elig.marketing, inp.gstCreditTreatment);
+      var fixedTax = applyExpenseTax(fixedBase, gstRatePct, elig.fixed, inp.gstCreditTreatment);
+
+      var otherVariableExpenses = otherVarTax.effectiveExpense;
+      var marketingExpenses = adSpendTax.effectiveExpense;
+      var variableSalesAndAcqCosts = otherVariableExpenses + marketingExpenses;
+      var totalVariableCosts = directFulfillmentCosts + variableSalesAndAcqCosts;
+      var totalFixedExpenses = fixedTax.effectiveExpense;
+      var totalExpenses = totalVariableCosts + totalFixedExpenses;
+
+      var totalContribution = grossProfit - variableSalesAndAcqCosts;
+      var contributionPerTraveler = safeDiv(totalContribution, netTravelers);
+      var contributionMarginPct = safeDiv(totalContribution, netRevenue) !== null ? safeDiv(totalContribution, netRevenue) * 100 : null;
+      var operatingProfit = totalContribution - totalFixedExpenses;
+      var profitPerTraveler = safeDiv(operatingProfit, netTravelers);
+      var profitMarginPct = safeDiv(operatingProfit, netRevenue) !== null ? safeDiv(operatingProfit, netRevenue) * 100 : null;
+
+      var costPerEnquiry = safeDiv(totalAdSpend, totalEnquiries);
+      var netAttributedBookings = attributedBookings * (1 - cancellationRatePct / 100);
+      var cacPerBooking = safeDiv(totalAdSpend, netAttributedBookings);
+      var acquisitionCostPerTraveler = safeDiv(totalAdSpend, netTravelers);
+      var enquiryToBookingPct = safeDiv(netAttributedBookings, totalEnquiries) !== null ? safeDiv(netAttributedBookings, totalEnquiries) * 100 : null;
+      var breakEven = computeBreakEven(totalFixedExpenses, contributionPerTraveler);
+
+      var totalRecoverableItc = supplierTax.recoverableItc + gatewayTax.recoverableItc + otherVarTax.recoverableItc + adSpendTax.recoverableItc + fixedTax.recoverableItc;
+      var totalNonRecoverableGst = supplierTax.nonRecoverableGst + gatewayTax.nonRecoverableGst + otherVarTax.nonRecoverableGst + adSpendTax.nonRecoverableGst + fixedTax.nonRecoverableGst;
+      var netGstPayable = Math.max(0, gstCollected - totalRecoverableItc);
+      var incomeTax = computeOptionalIncomeTax(operatingProfit, inp.includeIncomeTax, inp.incomeTaxRatePct);
+
+      var warnings = [];
+      if (netTravelers === 0) warnings.push({ level: 'info', text: 'Net travelers is 0. Per-traveler economics are N/A.' });
+      if (totalAdSpend > 0 && totalEnquiries === 0) warnings.push({ level: 'amber', text: 'Advertising spend entered without enquiries — Cost per Enquiry is N/A.' });
+      if (totalAdSpend > 0 && attributedBookings === 0) warnings.push({ level: 'amber', text: 'Advertising spend entered without attributed bookings — CAC per Booking is N/A.' });
+      if (netTravelers > 0 && operatingProfit < 0) warnings.push({ level: 'red', text: 'Travel agency is operating at a loss of ' + formatINR(Math.abs(operatingProfit)) + '.' });
+      if (contributionPerTraveler !== null && contributionPerTraveler <= 0) warnings.push({ level: 'red', text: 'Contribution per traveler is non-positive (' + formatINR(contributionPerTraveler) + '). Break-even is not achievable.' });
+      if (acquisitionCostPerTraveler !== null && contributionPerTraveler !== null && acquisitionCostPerTraveler > contributionPerTraveler && contributionPerTraveler > 0) warnings.push({ level: 'amber', text: 'Acquisition cost per traveler (' + formatINR(acquisitionCostPerTraveler) + ') exceeds contribution per traveler (' + formatINR(contributionPerTraveler) + ').' });
+      if (breakEven.achievable && breakEven.units !== null && netTravelers > 0 && breakEven.units > netTravelers) warnings.push({ level: 'amber', text: 'Break-even travelers (' + breakEven.units + ') exceeds current net travelers (' + formatCount(netTravelers, 1) + ').' });
+      if (netRevenue > 0 && (marketingExpenses / netRevenue) > 0.35) warnings.push({ level: 'amber', text: 'Marketing spend represents ' + formatPct((marketingExpenses / netRevenue) * 100) + ' of net revenue.' });
+      if (profitMarginPct !== null && profitMarginPct >= 0 && profitMarginPct < safeNum(inp.targetMarginPct, 10)) warnings.push({ level: 'amber', text: 'Operating profit margin (' + formatPct(profitMarginPct) + ') is below your ' + safeNum(inp.targetMarginPct, 10) + '% threshold.' });
+
+      return {
+        industry: 'travel', label: 'Travel Agency', unitLabel: 'traveler', unitLabelPlural: 'travelers',
+        revenueModel: inp.revenueModel, isCommissionOnly: isCommissionOnly,
+        taxableRevenueBasis: isCommissionOnly ? 'Earned Partner Commission' : 'Gross Package Selling Price',
+        inputs: inp, grossPackageValueNetOfCancel: grossPackageValueNetOfCancel, supplierPassThrough: supplierPassThrough,
+        cancelledBookings: cancelledBookings, netBookings: netBookings, cancelledTravelers: cancelledTravelers,
+        netUnits: netTravelers, netTravelers: netTravelers, grossCustomerCollections: grossCustomerCollections,
+        netRevenue: netRevenue, gstCollected: gstCollected, netRevenuePerUnit: netRevenuePerTraveler,
+        hotelAndTransportCosts: hotelCostBase + transportCostBase, hotelExpenses: hotelCostBase, transportExpenses: transportCostBase,
+        mealExpenses: mealCostBase, otherSupplierExpenses: otherSupplierBase, supplierFulfillmentCost: supplierFulfillmentCost,
+        gatewayExpenses: gatewayExpenses, directFulfillmentCosts: directFulfillmentCosts, otherVariableExpenses: otherVariableExpenses,
+        marketingExpenses: marketingExpenses, variableSalesAndAcqCosts: variableSalesAndAcqCosts,
+        totalVariableExpenses: totalVariableCosts, totalFixedExpenses: totalFixedExpenses, totalExpenses: totalExpenses,
+        grossProfit: grossProfit, totalContribution: totalContribution, contributionPerUnit: contributionPerTraveler,
+        contributionMarginPct: contributionMarginPct, operatingProfit: operatingProfit, profitPerUnit: profitPerTraveler,
+        profitMarginPct: profitMarginPct, cpl: costPerEnquiry, costPerEnquiry: costPerEnquiry, cacPerBooking: cacPerBooking,
+        marketingCac: acquisitionCostPerTraveler, acquisitionCostPerTraveler: acquisitionCostPerTraveler,
+        conversionRatePct: enquiryToBookingPct, breakEven: breakEven,
+        taxSummary: {
+          gstRatePct: gstRatePct, priceMode: inp.priceMode, gstCreditTreatment: inp.gstCreditTreatment,
+          taxableBasis: isCommissionOnly ? 'Earned Commission' : 'Gross Package Price',
+          gstCollected: gstCollected, recoverableItc: totalRecoverableItc, nonRecoverableGst: totalNonRecoverableGst, netGstPayable: netGstPayable
+        },
+        incomeTax: incomeTax,
+        expenseCategories: [
+          { key: 'fulfillment', label: isCommissionOnly ? 'Payment Gateway Fees' : 'Supplier Fulfillment & Gateway', amount: directFulfillmentCosts },
+          { key: 'marketing', label: 'Marketing & Advertising', amount: marketingExpenses },
+          { key: 'sales', label: 'Sales Commissions', amount: 0 },
+          { key: 'otherVariable', label: 'Other Variable Traveler Costs', amount: otherVariableExpenses },
+          { key: 'fixed', label: 'Trip & Operational Fixed Overhead', amount: totalFixedExpenses }
+        ],
+        waterfall: [
+          { label: isCommissionOnly ? 'Gross Comm.' : 'Gross Package', value: waterfallGrossCollections, type: 'total' },
+          { label: 'Cancellations', value: -waterfallCancellations, type: 'negative' },
+          { label: 'GST Collected', value: -gstCollected, type: 'negative' },
+          { label: 'Net Revenue', value: netRevenue, type: 'subtotal' },
+          { label: isCommissionOnly ? 'Gateway Fees' : 'Supplier & GW', value: -directFulfillmentCosts, type: 'negative' },
+          { label: 'Gross Profit', value: grossProfit, type: 'subtotal' },
+          { label: 'Mktg & Var.', value: -variableSalesAndAcqCosts, type: 'negative' },
+          { label: 'Contribution', value: totalContribution, type: 'subtotal' },
+          { label: 'Fixed Overhead', value: -totalFixedExpenses, type: 'negative' },
+          { label: 'Operating Profit', value: operatingProfit, type: 'final' }
+        ],
+        warnings: warnings
+      };
+    }
+
+    function calculateOverview(eduRes, reRes, trRes) {
+      var totalNetRevenue = eduRes.netRevenue + reRes.netRevenue + trRes.netRevenue;
+      var totalOperatingProfit = eduRes.operatingProfit + reRes.operatingProfit + trRes.operatingProfit;
+      var totalExpenses = eduRes.totalExpenses + reRes.totalExpenses + trRes.totalExpenses;
+      var overallProfitMarginPct = safeDiv(totalOperatingProfit, totalNetRevenue) !== null
+        ? safeDiv(totalOperatingProfit, totalNetRevenue) * 100 : null;
+      var expMap = { fulfillment: 0, marketing: 0, sales: 0, otherVariable: 0, fixed: 0 };
+      [eduRes, reRes, trRes].forEach(function (r) {
+        r.expenseCategories.forEach(function (c) {
+          if (expMap[c.key] !== undefined) expMap[c.key] += c.amount;
+        });
+      });
+      return {
+        totalNetRevenue: totalNetRevenue, totalOperatingProfit: totalOperatingProfit,
+        totalExpenses: totalExpenses, overallProfitMarginPct: overallProfitMarginPct,
+        expenseBreakdown: [
+          { key: 'fulfillment', label: 'Fulfillment & Delivery', amount: expMap.fulfillment },
+          { key: 'marketing', label: 'Marketing & Advertising', amount: expMap.marketing },
+          { key: 'sales', label: 'Sales Commissions', amount: expMap.sales },
+          { key: 'otherVariable', label: 'Other Variable Expenses', amount: expMap.otherVariable },
+          { key: 'fixed', label: 'Fixed Overhead', amount: expMap.fixed }
+        ]
+      };
+    }
+
+    function runWhatIf(industry, baseInputs, scenarioType) {
+      var mod = JSON.parse(JSON.stringify(baseInputs));
+      var label = '';
+      if (industry === 'education') {
+        if (scenarioType === 'cac_up_20') { mod.totalAdSpend = Math.round(mod.totalAdSpend * 1.2); label = 'Marketing CAC increases by 20%'; }
+        else if (scenarioType === 'ad_down_20') { mod.totalAdSpend = Math.round(mod.totalAdSpend * 0.8); label = 'Advertising spend decreases by 20%'; }
+        else if (scenarioType === 'conv_up_10') { mod.enrolledStudents = Math.round(mod.enrolledStudents * 1.1); mod.attributedStudents = Math.round(mod.attributedStudents * 1.1); label = 'Conversion rate improves by 10%'; }
+        else if (scenarioType === 'price_up_5') { mod.courseFee = Math.round(mod.courseFee * 1.05); label = 'Course fee increases by 5%'; }
+        else if (scenarioType === 'supplier_up_10') { mod.lmsCost = Math.round(mod.lmsCost * 1.1); mod.trainerCost = Math.round(mod.trainerCost * 1.1); label = 'Delivery costs (LMS & Trainer) increase by 10%'; }
+        else if (scenarioType === 'cancel_up_5') { mod.refundPct = Math.min(100, safeNum(mod.refundPct, 0) + 5); label = 'Refund rate increases by 5 percentage points'; }
+        return { label: label, base: calculateEducation(baseInputs), simulated: calculateEducation(mod), modifiedInputs: mod };
+      } else if (industry === 'realEstate') {
+        if (scenarioType === 'cac_up_20') { mod.totalAdSpend = Math.round(mod.totalAdSpend * 1.2); label = 'Marketing CAC increases by 20%'; }
+        else if (scenarioType === 'ad_down_20') { mod.totalAdSpend = Math.round(mod.totalAdSpend * 0.8); label = 'Advertising spend decreases by 20%'; }
+        else if (scenarioType === 'conv_up_10') { mod.grossClosedDeals = Number((mod.grossClosedDeals * 1.1).toFixed(2)); label = 'Lead-to-close conversion improves by 10%'; }
+        else if (scenarioType === 'price_up_5') {
+          if (mod.revenueMethod === 'FIXED_PER_DEAL') mod.fixedRevenuePerDeal = Math.round(mod.fixedRevenuePerDeal * 1.05);
+          else mod.brokerageRatePct = Number((mod.brokerageRatePct * 1.05).toFixed(3));
+          label = 'Brokerage / deal fee increases by 5%';
+        }
+        else if (scenarioType === 'supplier_up_10') { mod.salesCostPerNetDeal = Math.round(mod.salesCostPerNetDeal * 1.1); mod.otherVariableCostPerNetDeal = Math.round(mod.otherVariableCostPerNetDeal * 1.1); label = 'Sales & closing costs increase by 10%'; }
+        else if (scenarioType === 'cancel_up_5') { mod.cancellationRatePct = Math.min(100, safeNum(mod.cancellationRatePct, 0) + 5); label = 'Cancellation rate increases by 5 percentage points'; }
+        return { label: label, base: calculateRealEstate(baseInputs), simulated: calculateRealEstate(mod), modifiedInputs: mod };
+      } else {
+        if (scenarioType === 'cac_up_20') { mod.totalAdSpend = Math.round(mod.totalAdSpend * 1.2); label = 'Marketing CAC increases by 20%'; }
+        else if (scenarioType === 'ad_down_20') { mod.totalAdSpend = Math.round(mod.totalAdSpend * 0.8); label = 'Advertising spend decreases by 20%'; }
+        else if (scenarioType === 'conv_up_10') { mod.travelers = Math.round(mod.travelers * 1.1); mod.bookings = Math.round(mod.bookings * 1.1); mod.attributedBookings = Math.round(mod.attributedBookings * 1.1); label = 'Conversion rate improves by 10%'; }
+        else if (scenarioType === 'price_up_5') { mod.sellingPricePerTraveler = Math.round(mod.sellingPricePerTraveler * 1.05); label = 'Package price increases by 5%'; }
+        else if (scenarioType === 'supplier_up_10') { mod.hotelSupplierCostPerTraveler = Math.round(mod.hotelSupplierCostPerTraveler * 1.1); mod.transportCostPerTraveler = Math.round(mod.transportCostPerTraveler * 1.1); mod.mealCostPerTraveler = Math.round(mod.mealCostPerTraveler * 1.1); label = 'Supplier costs increase by 10%'; }
+        else if (scenarioType === 'cancel_up_5') { mod.cancellationRatePct = Math.min(100, safeNum(mod.cancellationRatePct, 0) + 5); label = 'Cancellation rate increases by 5 percentage points'; }
+        return { label: label, base: calculateTravel(baseInputs), simulated: calculateTravel(mod), modifiedInputs: mod };
+      }
+    }
+
+    function generateRuleBasedAdvice(result) {
+      var unit = result.unitLabel;
+      var unitsPlural = result.unitLabelPlural;
+      var isProfitable = result.operatingProfit > 0;
+      var sortedCosts = result.expenseCategories
+        .filter(function (c) { return c.amount > 0; })
+        .sort(function (a, b) { return b.amount - a.amount; })
+        .slice(0, 3)
+        .map(function (c) {
+          var share = result.totalExpenses > 0 ? (c.amount / result.totalExpenses) * 100 : 0;
+          var tip = 'Audit vendor contracts and introduce volume tiers to reduce this cost category.';
+          if (c.key === 'marketing') {
+            tip = 'Pause underperforming ad sets and improve lead qualification to reduce Marketing CAC from ' + formatINR(result.marketingCac) + '.';
+          } else if (c.key === 'fulfillment') {
+            tip = result.industry === 'travel'
+              ? 'Negotiate contracted net rates with hotels/transport suppliers or shift high-volume routes to fixed-allotment pricing.'
+              : result.industry === 'education'
+                ? 'Transition trainer or LMS fees from per-student to fixed per-batch pricing as enrollment scales beyond ' + formatCount(result.netUnits) + ' students.'
+                : 'Standardize legal/closing documentation workflows to trim per-deal fulfillment overhead.';
+          } else if (c.key === 'sales') {
+            tip = 'Align sales commissions to net collected revenue and tiered contribution thresholds rather than flat payouts.';
+          } else if (c.key === 'fixed') {
+            tip = 'Grow volume past the ' + (result.breakEven.achievable ? result.breakEven.units : 'N/A') + ' ' + unitsPlural + ' break-even point to amortize ' + formatINR(result.totalFixedExpenses) + ' fixed overhead.';
+          }
+          return {
+            label: c.label, amount: c.amount, pctOfTotal: share,
+            whyItMatters: c.label + ' accounts for ' + formatPct(share) + ' of total expenses (' + formatINR(c.amount) + ').',
+            optimization: tip
+          };
+        });
+
+      var cmHealth = result.contributionMarginPct === null ? 'undefined (net revenue is ₹0)'
+        : result.contributionMarginPct >= 40 ? 'healthy (' + formatPct(result.contributionMarginPct) + ')'
+        : result.contributionMarginPct >= 20 ? 'moderate (' + formatPct(result.contributionMarginPct) + ')'
+        : 'thin (' + formatPct(result.contributionMarginPct) + ')';
+
+      var breakEvenText = result.breakEven.achievable
+        ? (result.netUnits >= result.breakEven.units
+          ? 'You are ' + formatCount(result.netUnits - result.breakEven.units, 1) + ' ' + unitsPlural + ' above break-even (' + result.breakEven.units + ' ' + unitsPlural + ').'
+          : 'You need ' + formatCount(result.breakEven.units - result.netUnits, 1) + ' more ' + unitsPlural + ' to reach break-even (' + result.breakEven.units + ' ' + unitsPlural + ').')
+        : 'Break-even is not achievable because contribution per ' + unit + ' is ' + formatINR(result.contributionPerUnit) + '.';
+
+      var summary = isProfitable
+        ? 'Your ' + result.label + ' model is profitable, generating ' + formatINR(result.operatingProfit) + ' in operating profit (' + formatPct(result.profitMarginPct) + ' margin) on ' + formatINR(result.netRevenue) + ' net revenue.'
+        : result.operatingProfit === 0
+          ? 'Your ' + result.label + ' model is at exact break-even (₹0 operating profit) on ' + formatINR(result.netRevenue) + ' net revenue.'
+          : 'Your ' + result.label + ' model is operating at a loss of ' + formatINR(Math.abs(result.operatingProfit)) + ' (' + formatPct(result.profitMarginPct) + ' margin) on ' + formatINR(result.netRevenue) + ' net revenue.';
+
+      var profitabilityAssessment = 'Contribution margin is ' + cmHealth + ', producing ' + formatINR(result.contributionPerUnit) + ' contribution and ' + formatINR(result.profitPerUnit) + ' operating profit per ' + unit + '. ' + breakEvenText;
+
+      var risks = result.warnings.slice(0, 3).map(function (w) { return w.text; });
+      if (risks.length === 0) {
+        risks.push('Watch Marketing CAC (' + formatINR(result.marketingCac) + ') relative to contribution per ' + unit + ' (' + formatINR(result.contributionPerUnit) + ') when scaling spend.');
+        risks.push('A 5 percentage point rise in refunds/cancellations directly erodes net revenue while fixed overhead remains unchanged.');
+      }
+
+      var recs = [];
+      if (sortedCosts[0]) recs.push('Address your #1 cost driver — ' + sortedCosts[0].label + ' (' + formatINR(sortedCosts[0].amount) + ', ' + formatPct(sortedCosts[0].pctOfTotal) + ' of expenses): ' + sortedCosts[0].optimization);
+      var priceSim = runWhatIf(result.industry, result.inputs, 'price_up_5');
+      recs.push('Test a 5% price increase: at current volume, +5% pricing lifts operating profit by ' + formatINR(priceSim.simulated.operatingProfit - result.operatingProfit) + ' (to ' + formatINR(priceSim.simulated.operatingProfit) + ').');
+      var convSim = runWhatIf(result.industry, result.inputs, 'conv_up_10');
+      recs.push('Improve funnel conversion by 10%: holding ad spend constant at ' + formatINR(result.inputs.totalAdSpend) + ', +10% conversion adds ' + formatINR(convSim.simulated.operatingProfit - result.operatingProfit) + ' in operating profit.');
+
+      return {
+        source: 'Rule-Based Deterministic Advisor',
+        summary: summary,
+        profitabilityAssessment: profitabilityAssessment,
+        topCostDrivers: sortedCosts,
+        mainRisks: risks,
+        recommendations: recs
+      };
+    }
+
+    return {
+      safeNum, clamp, safeDiv, formatINR, formatPct, formatCount,
+      DEFAULT_EDUCATION_INPUTS, DEFAULT_REAL_ESTATE_INPUTS, DEFAULT_TRAVEL_INPUTS,
+      calculateEducation, calculateRealEstate, calculateTravel, calculateOverview,
+      runWhatIf, generateRuleBasedAdvice
+    };
+  })();
+  </script>
+
+  <!-- ========================================================================
+       APPLICATION STATE, UI RENDERERS, CHARTS, EXPORTS & EVENT WIRING
+       ======================================================================== -->
+  <script>
+  (function () {
+    'use strict';
+
+    const E = UnitWiseEngine;
+    const STORAGE_KEY = 'unitwise_ai_workspace_v1';
+
+    // Default Scenario Presets for each industry
+    function buildDefaultScenarios() {
+      const eduBase = JSON.parse(JSON.stringify(E.DEFAULT_EDUCATION_INPUTS));
+      const eduBest = Object.assign({}, eduBase, { enrolledStudents: 40, attributedStudents: 40, courseFee: 27000, totalAdSpend: 140000 });
+      const eduWorst = Object.assign({}, eduBase, { enrolledStudents: 20, attributedStudents: 20, refundPct: 10, totalAdSpend: 170000 });
+
+      const reBase = JSON.parse(JSON.stringify(E.DEFAULT_REAL_ESTATE_INPUTS));
+      const reBest = Object.assign({}, reBase, { grossClosedDeals: 5, bookings: 7, siteVisits: 22, totalAdSpend: 65000 });
+      const reWorst = Object.assign({}, reBase, { grossClosedDeals: 2, cancellationRatePct: 15, totalAdSpend: 75000 });
+
+      const trBase = JSON.parse(JSON.stringify(E.DEFAULT_TRAVEL_INPUTS));
+      const trBest = Object.assign({}, trBase, { travelers: 28, bookings: 14, attributedBookings: 14, sellingPricePerTraveler: 37000, hotelSupplierCostPerTraveler: 17000 });
+      const trWorst = Object.assign({}, trBase, { travelers: 14, bookings: 7, attributedBookings: 7, cancellationRatePct: 10, totalAdSpend: 75000 });
+
+      return {
+        education: [
+          { id: 'edu-base', name: 'Base Case', inputs: eduBase },
+          { id: 'edu-best', name: 'Best Case', inputs: eduBest },
+          { id: 'edu-worst', name: 'Worst Case', inputs: eduWorst }
+        ],
+        realEstate: [
+          { id: 're-base', name: 'Base Case', inputs: reBase },
+          { id: 're-best', name: 'Best Case', inputs: reBest },
+          { id: 're-worst', name: 'Worst Case', inputs: reWorst }
+        ],
+        travel: [
+          { id: 'tr-base', name: 'Base Case', inputs: trBase },
+          { id: 'tr-best', name: 'Best Case', inputs: trBest },
+          { id: 'tr-worst', name: 'Worst Case', inputs: trWorst }
+        ]
+      };
+    }
+
+    function getDefaultState() {
+      return {
+        activePage: 'overview',
+        education: JSON.parse(JSON.stringify(E.DEFAULT_EDUCATION_INPUTS)),
+        realEstate: JSON.parse(JSON.stringify(E.DEFAULT_REAL_ESTATE_INPUTS)),
+        travel: JSON.parse(JSON.stringify(E.DEFAULT_TRAVEL_INPUTS)),
+        scenarios: buildDefaultScenarios(),
+        scenarioIndustry: 'education',
+        advisorIndustry: 'education',
+        activeWhatIf: 'cac_up_20',
+        glossarySearch: '',
+        glossaryTab: 'glossary',
+        settings: {
+          aiEndpointUrl: '',
+          aiMode: 'RULE_BASED',
+          supabaseUrl: '',
+          reportingPeriod: 'Current Cycle / Monthly Illustrative'
+        }
+      };
+    }
+
+    function loadState() {
+      const def = getDefaultState();
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (!raw) return def;
+        const parsed = JSON.parse(raw);
+        return {
+          activePage: parsed.activePage || 'overview',
+          education: Object.assign({}, def.education, parsed.education || {}),
+          realEstate: Object.assign({}, def.realEstate, parsed.realEstate || {}),
+          travel: Object.assign({}, def.travel, parsed.travel || {}),
+          scenarios: parsed.scenarios && parsed.scenarios.education ? parsed.scenarios : def.scenarios,
+          scenarioIndustry: parsed.scenarioIndustry || 'education',
+          advisorIndustry: parsed.advisorIndustry || 'education',
+          activeWhatIf: parsed.activeWhatIf || 'cac_up_20',
+          glossarySearch: '',
+          glossaryTab: 'glossary',
+          settings: Object.assign({}, def.settings, parsed.settings || {})
+        };
+      } catch (e) {
+        return def;
+      }
+    }
+
+    let state = loadState();
+    let activeCharts = {};
+
+    function saveState() {
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify({
+          activePage: state.activePage,
+          education: state.education,
+          realEstate: state.realEstate,
+          travel: state.travel,
+          scenarios: state.scenarios,
+          scenarioIndustry: state.scenarioIndustry,
+          advisorIndustry: state.advisorIndustry,
+          activeWhatIf: state.activeWhatIf,
+          settings: state.settings
+        }));
+        const el = document.getElementById('save-status-text');
+        if (el) {
+          el.textContent = 'Saved locally';
+        }
+      } catch (e) {
+        const el = document.getElementById('save-status-text');
+        if (el) el.textContent = 'Session only';
+      }
+    }
+
+    function destroyCharts() {
+      Object.keys(activeCharts).forEach(k => {
+        if (activeCharts[k]) {
+          try { activeCharts[k].destroy(); } catch (e) {}
+        }
+      });
+      activeCharts = {};
+    }
+
+    function showToast(message, type) {
+      const container = document.getElementById('toast-container');
+      const colors = type === 'error'
+        ? 'bg-red-600 text-white'
+        : type === 'warning'
+          ? 'bg-amber-600 text-white'
+          : 'bg-slate-900 text-white';
+      const el = document.createElement('div');
+      el.className = 'pointer-events-auto px-4 py-2.5 rounded-lg shadow-lg text-sm font-medium flex items-center gap-2 transition-opacity duration-200 ' + colors;
+      el.textContent = message;
+      container.appendChild(el);
+      setTimeout(() => {
+        el.style.opacity = '0';
+        setTimeout(() => el.remove(), 220);
+      }, 2800);
+    }
+
+    // In-page confirmation modal
+    let modalConfirmCallback = null;
+    function openConfirmModal(title, message, onConfirm) {
+      document.getElementById('modal-title').textContent = title;
+      document.getElementById('modal-message').textContent = message;
+      modalConfirmCallback = onConfirm;
+      const modal = document.getElementById('confirm-modal');
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+    }
+    function closeConfirmModal() {
+      const modal = document.getElementById('confirm-modal');
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
+      modalConfirmCallback = null;
+    }
+
+    function escapeHtml(str) {
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
+    }
+
+    function infoTip(text) {
+      return '<span class="tooltip-wrap ml-1 text-slate-400 hover:text-slate-600 cursor-help" tabindex="0">' +
+        '<i data-lucide="info" class="w-3.5 h-3.5"></i>' +
+        '<span class="tooltip-box">' + escapeHtml(text) + '</span></span>';
+    }
+
+    function kpiCard(label, value, subtext, tone, tip) {
+      const toneClass = tone === 'positive'
+        ? 'text-emerald-600'
+        : tone === 'negative'
+          ? 'text-red-600'
+          : tone === 'amber'
+            ? 'text-amber-600'
+            : 'text-slate-900';
+      const badgeBg = tone === 'positive'
+        ? 'bg-emerald-50 border-emerald-200/80'
+        : tone === 'negative'
+          ? 'bg-red-50 border-red-200/80'
+          : 'bg-white border-slate-200';
+      return `
+        <div class="rounded-xl border p-4 shadow-sm ${badgeBg}">
+          <div class="flex items-center justify-between text-xs font-medium text-slate-500">
+            <span class="flex items-center">${escapeHtml(label)}${tip ? infoTip(tip) : ''}</span>
+          </div>
+          <div class="mt-2 text-xl sm:text-2xl font-bold tracking-tight ${toneClass}">${escapeHtml(value)}</div>
+          ${subtext ? `<div class="mt-1 text-xs text-slate-500">${escapeHtml(subtext)}</div>` : ''}
+        </div>
+      `;
+    }
+
+    function calcAll() {
+      const edu = E.calculateEducation(state.education);
+      const re = E.calculateRealEstate(state.realEstate);
+      const tr = E.calculateTravel(state.travel);
+      const ov = E.calculateOverview(edu, re, tr);
+      return { edu, re, tr, ov };
+    }
+
+    // ========================================================================
+    // EXPORT ENGINE (CSV, PDF via jsPDF, Print)
+    // ========================================================================
+    function escapeCsv(val) {
+      const s = String(val === null || val === undefined ? '' : val);
+      return /[",\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s;
+    }
+
+    function exportCSV(industry) {
+      const res = industry === 'education'
+        ? E.calculateEducation(state.education)
+        : industry === 'realEstate'
+          ? E.calculateRealEstate(state.realEstate)
+          : E.calculateTravel(state.travel);
+      const rows = [
+        ['UnitWise AI — Financial Unit Economics Export'],
+        ['Industry', res.label],
+        ['Generated On', new Date().toLocaleDateString('en-IN')],
+        ['Reporting Period', state.settings.reportingPeriod],
+        [],
+        ['SECTION', 'METRIC', 'VALUE', 'NOTES']
+      ];
+
+      Object.keys(res.inputs).forEach(k => {
+        if (k === 'expenseGstEligible') return;
+        rows.push(['Input Assumption', k, res.inputs[k], '']);
+      });
+      rows.push([]);
+      rows.push(['Revenue & Tax', 'Gross Customer Collections', res.grossCustomerCollections.toFixed(2), 'INR']);
+      rows.push(['Revenue & Tax', 'Net Revenue (Excl. GST)', res.netRevenue.toFixed(2), 'INR']);
+      rows.push(['Revenue & Tax', 'GST Collected', res.gstCollected.toFixed(2), res.taxSummary.gstRatePct + '% (' + res.taxSummary.priceMode + ')']);
+      rows.push(['Revenue & Tax', 'Recoverable Input GST (ITC)', res.taxSummary.recoverableItc.toFixed(2), res.taxSummary.gstCreditTreatment]);
+      rows.push(['Revenue & Tax', 'Non-Recoverable Input GST', res.taxSummary.nonRecoverableGst.toFixed(2), 'Included in expenses if applicable']);
+      rows.push(['Revenue & Tax', 'Net Revenue per ' + res.unitLabel, res.netRevenuePerUnit !== null ? res.netRevenuePerUnit.toFixed(2) : 'N/A', 'INR']);
+      rows.push([]);
+      rows.push(['Expenses', 'Direct Fulfillment / Delivery Costs', res.directFulfillmentCosts.toFixed(2), 'INR']);
+      rows.push(['Expenses', 'Variable Sales & Acquisition Costs', res.variableSalesAndAcqCosts.toFixed(2), 'INR']);
+      rows.push(['Expenses', 'Total Variable Costs', res.totalVariableExpenses.toFixed(2), 'INR']);
+      rows.push(['Expenses', 'Total Fixed Overhead', res.totalFixedExpenses.toFixed(2), 'INR']);
+      rows.push(['Expenses', 'Total Business Expenses', res.totalExpenses.toFixed(2), 'INR']);
+      rows.push([]);
+      rows.push(['Profitability', 'Gross Profit', res.grossProfit.toFixed(2), 'INR']);
+      rows.push(['Profitability', 'Total Contribution', res.totalContribution.toFixed(2), 'INR']);
+      rows.push(['Profitability', 'Contribution per ' + res.unitLabel, res.contributionPerUnit !== null ? res.contributionPerUnit.toFixed(2) : 'N/A', 'INR']);
+      rows.push(['Profitability', 'Contribution Margin (%)', res.contributionMarginPct !== null ? res.contributionMarginPct.toFixed(2) + '%' : 'N/A', '']);
+      rows.push(['Profitability', 'Operating Profit', res.operatingProfit.toFixed(2), 'INR']);
+      rows.push(['Profitability', 'Profit per ' + res.unitLabel, res.profitPerUnit !== null ? res.profitPerUnit.toFixed(2) : 'N/A', 'INR']);
+      rows.push(['Profitability', 'Operating Profit Margin (%)', res.profitMarginPct !== null ? res.profitMarginPct.toFixed(2) + '%' : 'N/A', '']);
+      if (res.incomeTax.enabled) {
+        rows.push(['Income Tax (Optional)', 'Estimated Income Tax (' + res.incomeTax.ratePct + '%)', res.incomeTax.estimatedIncomeTax.toFixed(2), 'Separate from operating expenses']);
+        rows.push(['Income Tax (Optional)', 'Estimated Post-Tax Profit', res.incomeTax.postTaxProfit.toFixed(2), 'INR']);
+      }
+      rows.push([]);
+      rows.push(['Unit Economics', 'Net ' + res.unitLabelPlural, res.netUnits, '']);
+      rows.push(['Unit Economics', 'Cost Per Lead / Enquiry (CPL)', res.cpl !== null ? res.cpl.toFixed(2) : 'N/A', 'INR']);
+      rows.push(['Unit Economics', 'Marketing CAC per ' + res.unitLabel, res.marketingCac !== null ? res.marketingCac.toFixed(2) : 'N/A', 'INR']);
+      rows.push(['Unit Economics', 'Break-even ' + res.unitLabelPlural, res.breakEven.achievable ? res.breakEven.units : res.breakEven.message, '']);
+
+      const csv = '\uFEFF' + rows.map(r => r.map(escapeCsv).join(',')).join('\r\n');
+      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'UnitWise-AI-' + industry + '-report.csv';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      showToast('CSV report exported for ' + res.label);
+    }
+
+    function exportPDF(industry) {
+      if (!window.jspdf || !window.jspdf.jsPDF) {
+        showToast('PDF library loading — use Print Report as fallback.', 'warning');
+        return;
+      }
+      const res = industry === 'education'
+        ? E.calculateEducation(state.education)
+        : industry === 'realEstate'
+          ? E.calculateRealEstate(state.realEstate)
+          : E.calculateTravel(state.travel);
+      const advice = E.generateRuleBasedAdvice(res);
+      const doc = new window.jspdf.jsPDF({ unit: 'pt', format: 'a4' });
+      const pageW = doc.internal.pageSize.getWidth();
+      let y = 40;
+
+      // Header Banner
+      doc.setFillColor(15, 23, 42);
+      doc.rect(0, 0, pageW, 74, 'F');
+      doc.setTextColor(255, 255, 255);
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(18);
+      doc.text('UnitWise AI — Financial Profitability Report', 40, 34);
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(10);
+      doc.text(res.label + ' Unit Economics  |  ' + state.settings.reportingPeriod + '  |  Generated: ' + new Date().toLocaleDateString('en-IN'), 40, 54);
+
+      y = 96;
+      doc.setTextColor(15, 23, 42);
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(12);
+      doc.text('Executive Summary & Key Metrics', 40, y);
+      y += 16;
+
+      const summaryRows = [
+        ['Net Revenue (Excl. GST)', E.formatINR(res.netRevenue).replace(/₹/g, 'INR ')],
+        ['Gross Profit', E.formatINR(res.grossProfit).replace(/₹/g, 'INR ')],
+        ['Total Contribution', E.formatINR(res.totalContribution).replace(/₹/g, 'INR ') + ' (' + E.formatPct(res.contributionMarginPct) + ')'],
+        ['Total Fixed Overhead', E.formatINR(res.totalFixedExpenses).replace(/₹/g, 'INR ')],
+        ['Operating Profit', E.formatINR(res.operatingProfit).replace(/₹/g, 'INR ') + ' (' + E.formatPct(res.profitMarginPct) + ' margin)'],
+        ['Contribution per ' + res.unitLabel, E.formatINR(res.contributionPerUnit).replace(/₹/g, 'INR ')],
+        ['Marketing CAC / CPL', E.formatINR(res.marketingCac).replace(/₹/g, 'INR ') + ' / ' + E.formatINR(res.cpl).replace(/₹/g, 'INR ')],
+        ['Break-even Volume', res.breakEven.achievable ? (res.breakEven.units + ' ' + res.unitLabelPlural) : res.breakEven.message]
+      ];
+
+      doc.setFontSize(9.5);
+      summaryRows.forEach((row, idx) => {
+        if (idx % 2 === 0) {
+          doc.setFillColor(248, 250, 252);
+          doc.rect(40, y - 11, pageW - 80, 18, 'F');
+        }
+        doc.setFont('helvetica', 'bold');
+        doc.text(row[0], 48, y);
+        doc.setFont('helvetica', 'normal');
+        doc.text(row[1], 260, y);
+        y += 18;
+      });
+
+      y += 12;
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(12);
+      doc.text('GST & Tax Summary', 40, y);
+      y += 16;
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(9.5);
+      doc.text('GST Rate: ' + res.taxSummary.gstRatePct + '% (' + res.taxSummary.priceMode.replace('_', ' ') + ')  |  Input Credit: ' + res.taxSummary.gstCreditTreatment.replace('_', ' '), 40, y);
+      y += 15;
+      doc.text('GST Collected: ' + E.formatINR(res.gstCollected).replace(/₹/g, 'INR ') + '  |  Recoverable ITC: ' + E.formatINR(res.taxSummary.recoverableItc).replace(/₹/g, 'INR ') + '  |  Net GST Payable: ' + E.formatINR(res.taxSummary.netGstPayable).replace(/₹/g, 'INR '), 40, y);
+
+      y += 22;
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(12);
+      doc.text('Expense Breakdown', 40, y);
+      y += 16;
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(9.5);
+      res.expenseCategories.forEach(cat => {
+        const share = res.totalExpenses > 0 ? ((cat.amount / res.totalExpenses) * 100).toFixed(1) + '%' : '0.0%';
+        doc.text('- ' + cat.label + ': ' + E.formatINR(cat.amount).replace(/₹/g, 'INR ') + ' (' + share + ')', 48, y);
+        y += 15;
+      });
+
+      // Embed waterfall chart image if available on canvas
+      const wfCanvas = document.getElementById('chart-waterfall');
+      if (wfCanvas && y < 560) {
+        try {
+          y += 10;
+          doc.setFont('helvetica', 'bold');
+          doc.setFontSize(12);
+          doc.text('Revenue-to-Profit Waterfall', 40, y);
+          y += 8;
+          const imgData = wfCanvas.toDataURL('image/png', 1.0);
+          doc.addImage(imgData, 'PNG', 40, y, pageW - 80, 155);
+          y += 170;
+        } catch (e) {}
+      }
+
+      if (y > 680) { doc.addPage(); y = 48; }
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(12);
+      doc.text('Advisor Insights (Deterministic Rule-Based Engine)', 40, y);
+      y += 16;
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(9.5);
+      const lines = doc.splitTextToSize(advice.summary.replace(/₹/g, 'INR ') + ' ' + advice.profitabilityAssessment.replace(/₹/g, 'INR '), pageW - 80);
+      doc.text(lines, 40, y);
+      y += lines.length * 13 + 8;
+      advice.recommendations.forEach((rec, i) => {
+        const rLines = doc.splitTextToSize((i + 1) + '. ' + rec.replace(/₹/g, 'INR '), pageW - 80);
+        if (y + rLines.length * 13 > 790) { doc.addPage(); y = 48; }
+        doc.text(rLines, 40, y);
+        y += rLines.length * 13 + 5;
+      });
+
+      doc.save('UnitWise-AI-' + industry + '-report.pdf');
+      showToast('PDF report downloaded for ' + res.label);
+    }
+
+    // ========================================================================
+    // CHART RENDERING HELPERS
+    // ========================================================================
+    function renderOverviewCharts(edu, re, tr, ov) {
+      const revCtx = document.getElementById('chart-overview-rev');
+      if (revCtx && window.Chart) {
+        activeCharts.overviewRev = new Chart(revCtx, {
+          type: 'bar',
+          data: {
+            labels: ['Education', 'Real Estate', 'Travel Agency'],
+            datasets: [
+              { label: 'Net Revenue', data: [edu.netRevenue, re.netRevenue, tr.netRevenue], backgroundColor: '#2563EB', borderRadius: 6 },
+              { label: 'Total Expenses', data: [edu.totalExpenses, re.totalExpenses, tr.totalExpenses], backgroundColor: '#94A3B8', borderRadius: 6 },
+              { label: 'Operating Profit', data: [edu.operatingProfit, re.operatingProfit, tr.operatingProfit], backgroundColor: [edu, re, tr].map(r => r.operatingProfit >= 0 ? '#10B981' : '#EF4444'), borderRadius: 6 }
+            ]
+          },
+          options: {
+            responsive: true, maintainAspectRatio: false,
+            plugins: {
+              legend: { position: 'bottom', labels: { usePointStyle: true, boxWidth: 8, font: { family: 'Inter', size: 12 } } },
+              tooltip: { callbacks: { label: ctx => ctx.dataset.label + ': ' + E.formatINR(ctx.raw) } }
+            },
+            scales: {
+              y: { grid: { color: '#F1F5F9' }, ticks: { callback: v => E.formatINR(v), font: { size: 11 } } },
+              x: { grid: { display: false } }
+            }
+          }
+        });
+      }
+
+      const expCtx = document.getElementById('chart-overview-exp');
+      if (expCtx && window.Chart) {
+        const items = ov.expenseBreakdown.filter(x => x.amount > 0);
+        activeCharts.overviewExp = new Chart(expCtx, {
+          type: 'doughnut',
+          data: {
+            labels: items.length ? items.map(x => x.label) : ['No Expenses'],
+            datasets: [{
+              data: items.length ? items.map(x => x.amount) : [1],
+              backgroundColor: items.length ? ['#2563EB', '#F59E0B', '#8B5CF6', '#06B6D4', '#64748B'] : ['#E2E8F0'],
+              borderWidth: 2, borderColor: '#FFFFFF'
+            }]
+          },
+          options: {
+            responsive: true, maintainAspectRatio: false, cutout: '62%',
+            plugins: {
+              legend: { position: 'bottom', labels: { usePointStyle: true, boxWidth: 8, font: { family: 'Inter', size: 11 } } },
+              tooltip: { callbacks: { label: ctx => items.length ? (ctx.label + ': ' + E.formatINR(ctx.raw)) : '₹0' } }
+            }
+          }
+        });
+      }
+    }
+
+    function renderIndustryCharts(res) {
+      const wfCtx = document.getElementById('chart-waterfall');
+      if (wfCtx && window.Chart) {
+        let running = 0;
+        const bars = [];
+        const colors = [];
+        res.waterfall.forEach(step => {
+          if (step.type === 'total' || step.type === 'subtotal' || step.type === 'final') {
+            bars.push([0, step.value]);
+            running = step.value;
+            if (step.type === 'final') colors.push(step.value >= 0 ? '#10B981' : '#EF4444');
+            else colors.push('#2563EB');
+          } else {
+            const start = running;
+            const end = running + step.value;
+            bars.push([Math.min(start, end), Math.max(start, end)]);
+            running = end;
+            colors.push(step.value < 0 ? '#F87171' : '#34D399');
+          }
+        });
+
+        activeCharts.waterfall = new Chart(wfCtx, {
+          type: 'bar',
+          data: {
+            labels: res.waterfall.map(s => s.label),
+            datasets: [{
+              label: 'Amount (INR)',
+              data: bars,
+              backgroundColor: colors,
+              borderRadius: 4,
+              borderSkipped: false
+            }]
+          },
+          options: {
+            responsive: true, maintainAspectRatio: false,
+            plugins: {
+              legend: { display: false },
+              tooltip: {
+                callbacks: {
+                  label: ctx => {
+                    const step = res.waterfall[ctx.dataIndex];
+                    return step.label + ': ' + E.formatINR(step.value);
+                  }
+                }
+              }
+            },
+            scales: {
+              y: { grid: { color: '#F1F5F9' }, ticks: { callback: v => E.formatINR(v), font: { size: 11 } } },
+              x: { grid: { display: false }, ticks: { font: { size: 10 }, maxRotation: 35, minRotation: 0 } }
+            }
+          }
+        });
+      }
+
+      const expCtx = document.getElementById('chart-industry-exp');
+      if (expCtx && window.Chart) {
+        const items = res.expenseCategories.filter(x => x.amount > 0);
+        activeCharts.industryExp = new Chart(expCtx, {
+          type: 'doughnut',
+          data: {
+            labels: items.length ? items.map(x => x.label) : ['No Expenses'],
+            datasets: [{
+              data: items.length ? items.map(x => x.amount) : [1],
+              backgroundColor: items.length ? ['#2563EB', '#F59E0B', '#8B5CF6', '#06B6D4', '#64748B'] : ['#E2E8F0'],
+              borderWidth: 2, borderColor: '#FFFFFF'
+            }]
+          },
+          options: {
+            responsive: true, maintainAspectRatio: false, cutout: '62%',
+            plugins: {
+              legend: { position: 'bottom', labels: { usePointStyle: true, boxWidth: 8, font: { family: 'Inter', size: 11 } } },
+              tooltip: {
+                callbacks: {
+                  label: ctx => {
+                    if (!items.length) return '₹0';
+                    const pct = res.totalExpenses > 0 ? ((ctx.raw / res.totalExpenses) * 100).toFixed(1) + '%' : '0%';
+                    return ctx.label + ': ' + E.formatINR(ctx.raw) + ' (' + pct + ')';
+                  }
+                }
+              }
+            }
+          }
+        });
+      }
+    }
+
+    function renderScenarioCharts(results) {
+      const profitCtx = document.getElementById('chart-scenario-profit');
+      if (profitCtx && window.Chart) {
+        activeCharts.scenProfit = new Chart(profitCtx, {
+          type: 'bar',
+          data: {
+            labels: results.map(r => r.name),
+            datasets: [
+              { label: 'Net Revenue', data: results.map(r => r.calc.netRevenue), backgroundColor: '#93C5FD', borderRadius: 6 },
+              { label: 'Operating Profit', data: results.map(r => r.calc.operatingProfit), backgroundColor: results.map(r => r.calc.operatingProfit >= 0 ? '#10B981' : '#EF4444'), borderRadius: 6 }
+            ]
+          },
+          options: {
+            responsive: true, maintainAspectRatio: false,
+            plugins: {
+              legend: { position: 'bottom' },
+              tooltip: { callbacks: { label: ctx => ctx.dataset.label + ': ' + E.formatINR(ctx.raw) } }
+            },
+            scales: {
+              y: { grid: { color: '#F1F5F9' }, ticks: { callback: v => E.formatINR(v), font: { size: 11 } } },
+              x: { grid: { display: false } }
+            }
+          }
+        });
+      }
+
+      const marginCtx = document.getElementById('chart-scenario-margin');
+      if (marginCtx && window.Chart) {
+        activeCharts.scenMargin = new Chart(marginCtx, {
+          type: 'bar',
+          data: {
+            labels: results.map(r => r.name),
+            datasets: [
+              { label: 'Contribution Margin (%)', data: results.map(r => r.calc.contributionMarginPct || 0), backgroundColor: '#2563EB', borderRadius: 6 },
+              { label: 'Operating Profit Margin (%)', data: results.map(r => r.calc.profitMarginPct || 0), backgroundColor: results.map(r => (r.calc.profitMarginPct || 0) >= 0 ? '#10B981' : '#EF4444'), borderRadius: 6 }
+            ]
+          },
+          options: {
+            responsive: true, maintainAspectRatio: false,
+            plugins: {
+              legend: { position: 'bottom' },
+              tooltip: { callbacks: { label: ctx => ctx.dataset.label + ': ' + Number(ctx.raw).toFixed(1) + '%' } }
+            },
+            scales: {
+              y: { grid: { color: '#F1F5F9' }, ticks: { callback: v => v + '%', font: { size: 11 } } },
+              x: { grid: { display: false } }
+            }
+          }
+        });
+      }
+    }
+
+    // ========================================================================
+    // SHARED PROFITABILITY DASHBOARD SECTION (FOR ALL 3 CALCULATORS)
+    // ========================================================================
+    function renderProfitabilityDashboardHTML(res, extraRowsHtml) {
+      const beDisplay = res.breakEven.achievable
+        ? E.formatCount(res.breakEven.units) + ' ' + res.unitLabelPlural
+        : 'Not Achievable';
+      const beSub = res.breakEven.achievable
+        ? (res.netUnits >= res.breakEven.units ? 'Current volume is above break-even' : 'Below break-even volume')
+        : res.breakEven.message;
+
+      const alertsHtml = res.warnings.length > 0 ? `
+        <div class="space-y-2">
+          ${res.warnings.map(w => {
+            const cls = w.level === 'red'
+              ? 'bg-red-50 border-red-200 text-red-800'
+              : w.level === 'amber'
+                ? 'bg-amber-50 border-amber-200 text-amber-800'
+                : 'bg-blue-50 border-blue-200 text-blue-800';
+            const icon = w.level === 'red' ? 'alert-octagon' : w.level === 'amber' ? 'alert-triangle' : 'info';
+            return `<div class="flex items-start gap-2.5 px-3.5 py-2.5 rounded-lg border text-xs sm:text-sm ${cls}">
+              <i data-lucide="${icon}" class="w-4 h-4 shrink-0 mt-0.5"></i>
+              <span>${escapeHtml(w.text)}</span>
+            </div>`;
+          }).join('')}
+        </div>
+      ` : `
+        <div class="flex items-center gap-2.5 px-3.5 py-2.5 rounded-lg border bg-emerald-50 border-emerald-200 text-emerald-800 text-xs sm:text-sm">
+          <i data-lucide="check-circle-2" class="w-4 h-4 shrink-0"></i>
+          <span>Healthy unit economics: positive contribution, above break-even, and above your target margin threshold.</span>
+        </div>
+      `;
+
+      const perUnit = (val) => res.netUnits > 0 ? E.formatINR(val / res.netUnits) : 'N/A';
+
+      return `
+        <section class="space-y-5 pt-2">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div>
+              <h2 class="text-lg font-bold text-slate-900">${escapeHtml(res.label)} Profitability Dashboard</h2>
+              <p class="text-xs text-slate-500">Live deterministic outputs — updates instantly as you edit assumptions above.</p>
+            </div>
+            <div class="flex flex-wrap items-center gap-2 no-print">
+              <button data-export-pdf="${res.industry}" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium bg-brand-600 text-white hover:bg-brand-700 transition-colors">
+                <i data-lucide="file-down" class="w-3.5 h-3.5"></i> Export PDF
+              </button>
+              <button data-export-csv="${res.industry}" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium bg-white text-slate-700 border border-slate-300 hover:bg-slate-50 transition-colors">
+                <i data-lucide="table" class="w-3.5 h-3.5"></i> Export CSV
+              </button>
+              <button data-print-report="true" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium bg-white text-slate-700 border border-slate-300 hover:bg-slate-50 transition-colors">
+                <i data-lucide="printer" class="w-3.5 h-3.5"></i> Print Report
+              </button>
+            </div>
+          </div>
+
+          <!-- 6 KPI Cards -->
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            ${kpiCard('Net Revenue (Excl. GST)', E.formatINR(res.netRevenue), E.formatINR(res.netRevenuePerUnit) + ' per ' + res.unitLabel, 'neutral', 'Customer collections after discounts and refunds/cancellations, excluding GST.')}
+            ${kpiCard('Operating Profit', E.formatINR(res.operatingProfit), E.formatINR(res.profitPerUnit) + ' per ' + res.unitLabel, res.operatingProfit >= 0 ? 'positive' : 'negative', 'Total Contribution minus Fixed Overhead.')}
+            ${kpiCard('Contribution per ' + res.unitLabel.charAt(0).toUpperCase() + res.unitLabel.slice(1), E.formatINR(res.contributionPerUnit), 'Margin: ' + E.formatPct(res.contributionMarginPct), (res.contributionPerUnit || 0) > 0 ? 'positive' : 'negative', 'Total Contribution divided by Net Paying Units.')}
+            ${kpiCard('Operating Profit Margin', E.formatPct(res.profitMarginPct), res.incomeTax.enabled ? 'Post-Tax: ' + E.formatINR(res.incomeTax.postTaxProfit) : 'Pre-Income Tax', (res.profitMarginPct || 0) >= 0 ? 'positive' : 'negative', 'Operating Profit divided by Net Revenue × 100.')}
+            ${kpiCard('Break-even ' + res.unitLabelPlural.charAt(0).toUpperCase() + res.unitLabelPlural.slice(1), beDisplay, beSub, res.breakEven.achievable ? (res.netUnits >= res.breakEven.units ? 'positive' : 'amber') : 'negative', 'CEILING(Fixed Costs / Contribution per Unit) when Contribution per Unit > 0.')}
+            ${kpiCard('Marketing CAC', E.formatINR(res.marketingCac), 'CPL / Enquiry: ' + E.formatINR(res.cpl), 'neutral', 'Advertising Spend divided by Attributed Paying Units (no double counting).')}
+          </div>
+
+          <!-- Profitability Alerts -->
+          ${alertsHtml}
+
+          <!-- Charts Grid -->
+          <div class="grid grid-cols-1 lg:grid-cols-3 gap-5">
+            <div class="card p-5 lg:col-span-2">
+              <div class="flex items-center justify-between mb-3">
+                <h3 class="text-sm font-semibold text-slate-900">Revenue-to-Profit Waterfall</h3>
+                <span class="text-xs text-slate-500">INR (₹)</span>
+              </div>
+              <div class="relative h-72"><canvas id="chart-waterfall"></canvas></div>
+            </div>
+            <div class="card p-5">
+              <div class="flex items-center justify-between mb-3">
+                <h3 class="text-sm font-semibold text-slate-900">Expense Breakdown</h3>
+                <span class="text-xs text-slate-500">${E.formatINR(res.totalExpenses)}</span>
+              </div>
+              <div class="relative h-72"><canvas id="chart-industry-exp"></canvas></div>
+            </div>
+          </div>
+
+          <!-- Financial Results Statement Table + GST Summary -->
+          <div class="grid grid-cols-1 lg:grid-cols-3 gap-5">
+            <div class="card overflow-hidden lg:col-span-2">
+              <div class="px-5 py-3.5 border-b border-slate-200 flex items-center justify-between bg-slate-50/70">
+                <h3 class="text-sm font-semibold text-slate-900">Detailed Financial Statement</h3>
+                <span class="text-xs text-slate-500">Net Volume: ${E.formatCount(res.netUnits, 1)} ${escapeHtml(res.unitLabelPlural)}</span>
+              </div>
+              <div class="overflow-x-auto">
+                <table class="w-full text-sm text-left">
+                  <thead class="text-xs uppercase text-slate-500 bg-slate-50 border-b border-slate-200">
+                    <tr>
+                      <th class="px-5 py-2.5 font-semibold">Financial Metric</th>
+                      <th class="px-4 py-2.5 font-semibold text-right">Per ${escapeHtml(res.unitLabel)}</th>
+                      <th class="px-5 py-2.5 font-semibold text-right">Total (INR)</th>
+                    </tr>
+                  </thead>
+                  <tbody class="divide-y divide-slate-100">
+                    <tr><td class="px-5 py-2.5 text-slate-700">Customer Collections (Incl. GST)</td><td class="px-4 py-2.5 text-right text-slate-600">${perUnit(res.grossCustomerCollections)}</td><td class="px-5 py-2.5 text-right font-medium">${E.formatINR(res.grossCustomerCollections)}</td></tr>
+                    <tr><td class="px-5 py-2.5 text-slate-500">Less: Indirect Taxes (GST Collected)</td><td class="px-4 py-2.5 text-right text-slate-500">-${perUnit(res.gstCollected)}</td><td class="px-5 py-2.5 text-right text-slate-600">-${E.formatINR(res.gstCollected)}</td></tr>
+                    <tr class="bg-blue-50/40 font-semibold"><td class="px-5 py-2.5 text-slate-900">Net Revenue (Excl. GST)${infoTip('Recognized business revenue after discounts, refunds/cancellations, and indirect taxes.')}</td><td class="px-4 py-2.5 text-right text-slate-900">${E.formatINR(res.netRevenuePerUnit)}</td><td class="px-5 py-2.5 text-right text-brand-700">${E.formatINR(res.netRevenue)}</td></tr>
+                    ${extraRowsHtml || ''}
+                    <tr><td class="px-5 py-2.5 text-slate-700">Less: Direct Delivery / Fulfillment Costs</td><td class="px-4 py-2.5 text-right text-slate-600">-${perUnit(res.directFulfillmentCosts)}</td><td class="px-5 py-2.5 text-right text-slate-700">-${E.formatINR(res.directFulfillmentCosts)}</td></tr>
+                    <tr class="bg-slate-50 font-semibold"><td class="px-5 py-2.5 text-slate-900">Gross Profit${infoTip('Net Revenue minus Direct Service / Fulfillment Costs.')}</td><td class="px-4 py-2.5 text-right">${perUnit(res.grossProfit)}</td><td class="px-5 py-2.5 text-right">${E.formatINR(res.grossProfit)}</td></tr>
+                    <tr><td class="px-5 py-2.5 text-slate-700">Less: Variable Sales, Marketing & Other Costs</td><td class="px-4 py-2.5 text-right text-slate-600">-${perUnit(res.variableSalesAndAcqCosts)}</td><td class="px-5 py-2.5 text-right text-slate-700">-${E.formatINR(res.variableSalesAndAcqCosts)}</td></tr>
+                    <tr class="bg-slate-50 font-semibold"><td class="px-5 py-2.5 text-slate-900">Total Contribution (${E.formatPct(res.contributionMarginPct)})${infoTip('Gross Profit minus Variable Sales and Acquisition Costs.')}</td><td class="px-4 py-2.5 text-right">${E.formatINR(res.contributionPerUnit)}</td><td class="px-5 py-2.5 text-right">${E.formatINR(res.totalContribution)}</td></tr>
+                    <tr><td class="px-5 py-2.5 text-slate-700">Less: Fixed Overhead</td><td class="px-4 py-2.5 text-right text-slate-600">-${perUnit(res.totalFixedExpenses)}</td><td class="px-5 py-2.5 text-right text-slate-700">-${E.formatINR(res.totalFixedExpenses)}</td></tr>
+                    <tr class="${res.operatingProfit >= 0 ? 'bg-emerald-50/70' : 'bg-red-50/70'} font-bold">
+                      <td class="px-5 py-3 text-slate-900">Operating Profit (${E.formatPct(res.profitMarginPct)})</td>
+                      <td class="px-4 py-3 text-right ${res.operatingProfit >= 0 ? 'text-emerald-700' : 'text-red-700'}">${E.formatINR(res.profitPerUnit)}</td>
+                      <td class="px-5 py-3 text-right ${res.operatingProfit >= 0 ? 'text-emerald-700' : 'text-red-700'}">${E.formatINR(res.operatingProfit)}</td>
+                    </tr>
+                    ${res.incomeTax.enabled ? `
+                      <tr><td class="px-5 py-2 text-slate-600 text-xs">Less: Estimated Income Tax (${res.incomeTax.ratePct}% — optional, separate from operating expenses)</td><td class="px-4 py-2 text-right text-xs text-slate-500">-${perUnit(res.incomeTax.estimatedIncomeTax)}</td><td class="px-5 py-2 text-right text-xs text-slate-600">-${E.formatINR(res.incomeTax.estimatedIncomeTax)}</td></tr>
+                      <tr class="bg-slate-50 font-semibold"><td class="px-5 py-2.5 text-slate-900">Estimated Post-Tax Profit</td><td class="px-4 py-2.5 text-right">${perUnit(res.incomeTax.postTaxProfit)}</td><td class="px-5 py-2.5 text-right">${E.formatINR(res.incomeTax.postTaxProfit)}</td></tr>
+                    ` : ''}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <!-- GST & Unit Summary Card -->
+            <div class="card p-5 space-y-4">
+              <h3 class="text-sm font-semibold text-slate-900 border-b border-slate-100 pb-2.5">Tax & Unit Economics Summary</h3>
+              <div class="space-y-2.5 text-xs sm:text-sm">
+                <div class="flex justify-between"><span class="text-slate-500">Pricing Mode</span><span class="font-medium text-slate-800">${res.taxSummary.priceMode === 'GST_INCLUSIVE' ? 'GST Inclusive' : 'GST Exclusive'} (${res.taxSummary.gstRatePct}%)</span></div>
+                <div class="flex justify-between"><span class="text-slate-500">Input GST Treatment</span><span class="font-medium text-slate-800">${res.taxSummary.gstCreditTreatment === 'RECOVERABLE' ? 'Recoverable (ITC)' : 'Non-Recoverable'}</span></div>
+                <div class="flex justify-between"><span class="text-slate-500">Output GST Collected</span><span class="font-medium text-slate-900">${E.formatINR(res.gstCollected)}</span></div>
+                <div class="flex justify-between"><span class="text-slate-500">Recoverable Input GST (ITC)</span><span class="font-medium text-emerald-700">${E.formatINR(res.taxSummary.recoverableItc)}</span></div>
+                <div class="flex justify-between"><span class="text-slate-500">Non-Recoverable Input GST</span><span class="font-medium text-amber-700">${E.formatINR(res.taxSummary.nonRecoverableGst)}</span></div>
+                <div class="flex justify-between pt-2 border-t border-slate-100 font-semibold"><span class="text-slate-700">Est. Net GST Payable</span><span class="text-slate-900">${E.formatINR(res.taxSummary.netGstPayable)}</span></div>
+              </div>
+              <div class="pt-3 border-t border-slate-100 space-y-2 text-xs">
+                <div class="flex justify-between"><span class="text-slate-500">Total Variable Costs</span><span class="font-medium text-slate-800">${E.formatINR(res.totalVariableExpenses)}</span></div>
+                <div class="flex justify-between"><span class="text-slate-500">Total Fixed Overhead</span><span class="font-medium text-slate-800">${E.formatINR(res.totalFixedExpenses)}</span></div>
+                <div class="flex justify-between"><span class="text-slate-500">Total Business Expenses</span><span class="font-semibold text-slate-900">${E.formatINR(res.totalExpenses)}</span></div>
+              </div>
+              <button data-goto-advisor="${res.industry}" class="w-full mt-2 inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg text-xs font-semibold bg-brand-50 text-brand-700 border border-brand-200 hover:bg-brand-100 transition-colors no-print">
+                <i data-lucide="sparkles" class="w-3.5 h-3.5"></i> Analyze in AI Business Advisor
+              </button>
+            </div>
+          </div>
+        </section>
+      `;
+    }
+
+    // ========================================================================
+    // PAGE 1: BUSINESS OVERVIEW DASHBOARD
+    // ========================================================================
+    function renderOverviewPage() {
+      const { edu, re, tr, ov } = calcAll();
+
+      function bizCard(res, volLabel, volVal, beLabel) {
+        const profCls = res.operatingProfit >= 0 ? 'text-emerald-600' : 'text-red-600';
+        return `
+          <div class="card p-5 flex flex-col justify-between gap-4 hover:border-brand-300 transition-colors">
+            <div>
+              <div class="flex items-center justify-between">
+                <h3 class="text-base font-bold text-slate-900">${escapeHtml(res.label)}</h3>
+                <span class="px-2 py-0.5 rounded-full text-xs font-semibold ${res.operatingProfit >= 0 ? 'bg-emerald-50 text-emerald-700' : 'bg-red-50 text-red-700'}">
+                  ${E.formatPct(res.profitMarginPct)} Margin
+                </span>
+              </div>
+              <div class="mt-4 space-y-2 text-sm">
+                <div class="flex justify-between"><span class="text-slate-500">Net Revenue</span><span class="font-semibold text-slate-900">${E.formatINR(res.netRevenue)}</span></div>
+                <div class="flex justify-between"><span class="text-slate-500">Operating Profit</span><span class="font-bold ${profCls}">${E.formatINR(res.operatingProfit)}</span></div>
+                <div class="flex justify-between"><span class="text-slate-500">${escapeHtml(volLabel)}</span><span class="font-medium text-slate-800">${escapeHtml(volVal)}</span></div>
+                <div class="flex justify-between"><span class="text-slate-500">${escapeHtml(beLabel)}</span><span class="font-medium text-slate-800">${res.breakEven.achievable ? E.formatCount(res.breakEven.units) : 'Not Achievable'}</span></div>
+              </div>
+            </div>
+            <button data-nav-target="${res.industry}" class="w-full inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg text-xs font-semibold bg-slate-900 text-white hover:bg-slate-800 transition-colors">
+              <span>View Calculator</span>
+              <i data-lucide="arrow-right" class="w-3.5 h-3.5"></i>
+            </button>
+          </div>
+        `;
+      }
+
+      document.getElementById('page-content').innerHTML = `
+        <div class="flex items-start gap-3 px-4 py-3 rounded-xl bg-blue-50/80 border border-blue-200 text-xs sm:text-sm text-blue-900">
+          <i data-lucide="info" class="w-4 h-4 shrink-0 mt-0.5 text-brand-600"></i>
+          <div>
+            <span class="font-semibold">Illustrative Aggregation Notice:</span> This combined overview aggregates three independent industry models preloaded with editable sample assumptions. Models may represent different reporting periods (e.g., cohort batch vs. monthly agency cycle) and do not constitute a consolidated financial statement.
+          </div>
+        </div>
+
+        <!-- Combined KPI Cards -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          ${kpiCard('Total Net Revenue', E.formatINR(ov.totalNetRevenue), 'Combined across 3 models', 'neutral')}
+          ${kpiCard('Total Operating Profit', E.formatINR(ov.totalOperatingProfit), 'After direct, variable & fixed costs', ov.totalOperatingProfit >= 0 ? 'positive' : 'negative')}
+          ${kpiCard('Total Expenses', E.formatINR(ov.totalExpenses), 'Fulfillment, marketing, sales & fixed', 'neutral')}
+          ${kpiCard('Overall Profit Margin', E.formatPct(ov.overallProfitMarginPct), 'Operating Profit / Net Revenue', (ov.overallProfitMarginPct || 0) >= 0 ? 'positive' : 'negative')}
+        </div>
+
+        <!-- Charts Row -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-5">
+          <div class="card p-5 lg:col-span-2">
+            <div class="flex items-center justify-between mb-3">
+              <div>
+                <h2 class="text-sm font-semibold text-slate-900">Revenue, Expenses & Operating Profit by Business</h2>
+                <p class="text-xs text-slate-500">Live comparison from each industry calculator</p>
+              </div>
+            </div>
+            <div class="relative h-72"><canvas id="chart-overview-rev"></canvas></div>
+          </div>
+          <div class="card p-5">
+            <div class="flex items-center justify-between mb-3">
+              <div>
+                <h2 class="text-sm font-semibold text-slate-900">Combined Expense Breakdown</h2>
+                <p class="text-xs text-slate-500">Total: ${E.formatINR(ov.totalExpenses)}</p>
+              </div>
+            </div>
+            <div class="relative h-72"><canvas id="chart-overview-exp"></canvas></div>
+          </div>
+        </div>
+
+        <!-- 3 Business Performance Cards -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
+          ${bizCard(edu, 'Current Enrollment', E.formatCount(edu.netUnits, 1) + ' students', 'Break-even Students')}
+          ${bizCard(re, 'Net Closed Deals', E.formatCount(re.netClosedDeals, 1) + ' deals', 'Break-even Deals')}
+          ${bizCard(tr, 'Net Travelers', E.formatCount(tr.netTravelers, 1) + ' travelers', 'Break-even Travelers')}
+        </div>
+
+        <!-- Acquisition & Break-even Comparison Table -->
+        <div class="card overflow-hidden">
+          <div class="px-5 py-3.5 border-b border-slate-200 bg-slate-50/70">
+            <h2 class="text-sm font-semibold text-slate-900">Acquisition & Break-even Overview</h2>
+          </div>
+          <div class="overflow-x-auto">
+            <table class="w-full text-sm text-left">
+              <thead class="text-xs uppercase text-slate-500 bg-slate-50 border-b border-slate-200">
+                <tr>
+                  <th class="px-5 py-3 font-semibold">Business Model</th>
+                  <th class="px-4 py-3 font-semibold text-right">Cost Per Lead (CPL)</th>
+                  <th class="px-4 py-3 font-semibold text-right">Customer Acquisition Cost</th>
+                  <th class="px-4 py-3 font-semibold text-right">Contribution / Unit</th>
+                  <th class="px-4 py-3 font-semibold text-right">Break-even Units</th>
+                  <th class="px-5 py-3 font-semibold text-right">Current Volume</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-slate-100">
+                ${[edu, re, tr].map(r => `
+                  <tr class="hover:bg-slate-50/60">
+                    <td class="px-5 py-3 font-semibold text-slate-900">${escapeHtml(r.label)}</td>
+                    <td class="px-4 py-3 text-right text-slate-700">${E.formatINR(r.cpl)}</td>
+                    <td class="px-4 py-3 text-right text-slate-700">${E.formatINR(r.marketingCac)}</td>
+                    <td class="px-4 py-3 text-right font-medium ${(r.contributionPerUnit || 0) > 0 ? 'text-emerald-700' : 'text-red-600'}">${E.formatINR(r.contributionPerUnit)}</td>
+                    <td class="px-4 py-3 text-right font-medium text-slate-900">${r.breakEven.achievable ? (E.formatCount(r.breakEven.units) + ' ' + r.unitLabelPlural) : '<span class="text-red-600 text-xs">Not Achievable</span>'}</td>
+                    <td class="px-5 py-3 text-right text-slate-700">${E.formatCount(r.netUnits, 1)} ${escapeHtml(r.unitLabelPlural)}</td>
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      `;
+      renderOverviewCharts(edu, re, tr, ov);
+    }
+
+    // ========================================================================
+    // INPUT FIELD HELPERS
+    // ========================================================================
+    function numInput(model, field, label, value, opts) {
+      const o = opts || {};
+      const step = o.step !== undefined ? o.step : 'any';
+      const min = o.min !== undefined ? o.min : 0;
+      const max = o.max !== undefined ? `max="${o.max}"` : '';
+      const prefix = o.prefix ? `<span class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs font-medium">${o.prefix}</span>` : '';
+      const suffix = o.suffix ? `<span class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs font-medium">${o.suffix}</span>` : '';
+      const padL = o.prefix ? 'pl-7' : '';
+      const padR = o.suffix ? 'pr-8' : '';
+      return `
+        <div>
+          <label class="block text-xs font-medium text-slate-700 mb-1 flex items-center">${escapeHtml(label)}${o.tip ? infoTip(o.tip) : ''}</label>
+          <div class="relative">
+            ${prefix}
+            <input type="number" min="${min}" ${max} step="${step}" value="${value}" data-model="${model}" data-field="${field}" class="input-base ${padL} ${padR}" />
+            ${suffix}
+          </div>
+        </div>
+      `;
+    }
+
+    function selectInput(model, field, label, value, options, tip) {
+      return `
+        <div>
+          <label class="block text-xs font-medium text-slate-700 mb-1 flex items-center">${escapeHtml(label)}${tip ? infoTip(tip) : ''}</label>
+          <select data-model="${model}" data-field="${field}" class="input-base">
+            ${options.map(opt => `<option value="${opt.value}" ${opt.value === value ? 'selected' : ''}>${escapeHtml(opt.label)}</option>`).join('')}
+          </select>
+        </div>
+      `;
+    }
+
+    // ========================================================================
+    // PAGE 2: EDUCATION CALCULATOR
+    // ========================================================================
+    function renderEducationPage() {
+      const inp = state.education;
+      const res = E.calculateEducation(inp);
+      const perU = (v) => res.netUnits > 0 ? E.formatINR(v / res.netUnits) : 'N/A';
+
+      const extraRows = `
+        <tr class="text-xs text-slate-500"><td class="px-5 py-1.5 pl-9">LMS Expenses (${inp.lmsBasis === 'PER_BATCH' ? 'Per Batch' : 'Per Student'})</td><td class="px-4 py-1.5 text-right">${perU(res.lmsExpenses)}</td><td class="px-5 py-1.5 text-right">${E.formatINR(res.lmsExpenses)}</td></tr>
+        <tr class="text-xs text-slate-500"><td class="px-5 py-1.5 pl-9">Trainer Expenses (${inp.trainerBasis === 'PER_BATCH' ? 'Per Batch' : 'Per Student'})</td><td class="px-4 py-1.5 text-right">${perU(res.trainerExpenses)}</td><td class="px-5 py-1.5 text-right">${E.formatINR(res.trainerExpenses)}</td></tr>
+        <tr class="text-xs text-slate-500"><td class="px-5 py-1.5 pl-9">Payment Gateway (${inp.gatewayBasis === 'PCT_OF_COLLECTION' ? inp.gatewayFee + '% of Collection' : 'Fixed/Student'})</td><td class="px-4 py-1.5 text-right">${perU(res.gatewayExpenses)}</td><td class="px-5 py-1.5 text-right">${E.formatINR(res.gatewayExpenses)}</td></tr>
+      `;
+
+      document.getElementById('page-content').innerHTML = `
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white border border-slate-200 rounded-xl px-4 py-3">
+          <div class="text-xs sm:text-sm text-slate-600">
+            <span class="font-semibold text-slate-900">Education Unit Economics:</span> Preloaded with illustrative sample cohort defaults (₹25,000 fee, 30 students). Edit any field below.
+          </div>
+          <div class="flex items-center gap-2 shrink-0 no-print">
+            <button data-clear-model="education" class="px-3 py-1.5 rounded-lg text-xs font-medium text-red-700 bg-red-50 border border-red-200 hover:bg-red-100">Clear All Inputs</button>
+          </div>
+        </div>
+
+        <!-- Input Panel -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-5">
+          <!-- Revenue & Tax -->
+          <div class="card p-5 space-y-4">
+            <h3 class="text-sm font-bold text-slate-900 flex items-center gap-2 border-b border-slate-100 pb-2.5">
+              <i data-lucide="indian-rupee" class="w-4 h-4 text-brand-600"></i> Revenue, Enrollment & Tax Assumptions
+            </h3>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+              ${numInput('education', 'courseFee', 'Course Fee per Student', inp.courseFee, { prefix: '₹', tip: 'Base selling fee per student.' })}
+              ${numInput('education', 'enrolledStudents', 'Enrolled Students', inp.enrolledStudents, { step: 1 })}
+              ${numInput('education', 'discountPct', 'Discount Percentage', inp.discountPct, { suffix: '%', max: 100 })}
+              ${numInput('education', 'refundPct', 'Refund Percentage', inp.refundPct, { suffix: '%', max: 100, tip: 'Refunded enrollments reduce net students and recognized revenue.' })}
+              ${selectInput('education', 'priceMode', 'Price Entry Mode', inp.priceMode, [
+                { value: 'GST_EXCLUSIVE', label: 'GST Exclusive (Add GST on top)' },
+                { value: 'GST_INCLUSIVE', label: 'GST Inclusive (Extract GST)' }
+              ])}
+              ${numInput('education', 'gstRatePct', 'GST Rate (Editable)', inp.gstRatePct, { suffix: '%', max: 100, tip: 'Illustrative editable GST rate; adjust per your course taxability.' })}
+              ${selectInput('education', 'gstCreditTreatment', 'Input GST Treatment', inp.gstCreditTreatment, [
+                { value: 'RECOVERABLE', label: 'Recoverable GST (ITC — excluded from expenses)' },
+                { value: 'NON_RECOVERABLE', label: 'Non-Recoverable GST (added to eligible costs)' }
+              ], 'Recoverable GST is claimed as ITC and never inflates business expenses.')}
+              <div>
+                <label class="block text-xs font-medium text-slate-700 mb-1">Optional Income Tax</label>
+                <div class="flex items-center gap-2">
+                  <input type="checkbox" data-model="education" data-field="includeIncomeTax" ${inp.includeIncomeTax ? 'checked' : ''} class="w-4 h-4 rounded border-slate-300 text-brand-600" />
+                  <input type="number" min="0" max="100" step="0.5" value="${inp.incomeTaxRatePct}" data-model="education" data-field="incomeTaxRatePct" class="input-base !py-1.5" ${inp.includeIncomeTax ? '' : 'disabled'} />
+                  <span class="text-xs text-slate-500">%</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Delivery & Selling Costs -->
+          <div class="card p-5 space-y-4">
+            <h3 class="text-sm font-bold text-slate-900 flex items-center gap-2 border-b border-slate-100 pb-2.5">
+              <i data-lucide="layers" class="w-4 h-4 text-brand-600"></i> Delivery & Selling Costs (Editable Cost Basis)
+            </h3>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+              ${numInput('education', 'lmsCost', 'LMS Cost', inp.lmsCost, { prefix: '₹' })}
+              ${selectInput('education', 'lmsBasis', 'LMS Cost Basis', inp.lmsBasis, [{ value: 'PER_STUDENT', label: 'Per Student' }, { value: 'PER_BATCH', label: 'Per Batch (Fixed)' }])}
+              ${numInput('education', 'gatewayFee', 'Payment Gateway Fee', inp.gatewayFee, { prefix: inp.gatewayBasis === 'FIXED_PER_STUDENT' ? '₹' : '', suffix: inp.gatewayBasis === 'PCT_OF_COLLECTION' ? '%' : '' })}
+              ${selectInput('education', 'gatewayBasis', 'Gateway Fee Basis', inp.gatewayBasis, [{ value: 'FIXED_PER_STUDENT', label: 'Fixed Amount / Student' }, { value: 'PCT_OF_COLLECTION', label: '% of Customer Collection' }])}
+              ${numInput('education', 'trainerCost', 'Trainer Cost', inp.trainerCost, { prefix: '₹' })}
+              ${selectInput('education', 'trainerBasis', 'Trainer Cost Basis', inp.trainerBasis, [{ value: 'PER_STUDENT', label: 'Per Student' }, { value: 'PER_BATCH', label: 'Per Batch (Fixed)' }])}
+              ${numInput('education', 'salesCommission', 'Sales Commission', inp.salesCommission, { prefix: inp.salesBasis === 'FIXED_PER_STUDENT' ? '₹' : '', suffix: inp.salesBasis === 'PCT_OF_REVENUE' ? '%' : '' })}
+              ${selectInput('education', 'salesBasis', 'Commission Basis', inp.salesBasis, [{ value: 'FIXED_PER_STUDENT', label: 'Fixed / Student' }, { value: 'PCT_OF_REVENUE', label: '% of Net Revenue' }])}
+              ${numInput('education', 'otherVariablePerStudent', 'Other Variable Cost / Student', inp.otherVariablePerStudent, { prefix: '₹' })}
+            </div>
+          </div>
+
+          <!-- Marketing & Acquisition -->
+          <div class="card p-5 space-y-4">
+            <h3 class="text-sm font-bold text-slate-900 flex items-center gap-2 border-b border-slate-100 pb-2.5">
+              <i data-lucide="megaphone" class="w-4 h-4 text-brand-600"></i> Marketing & Acquisition
+            </h3>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+              ${numInput('education', 'totalAdSpend', 'Total Advertising Spend', inp.totalAdSpend, { prefix: '₹', tip: 'Total campaign ad spend (e.g., ₹1,50,000 = ₹5,000/student × 30). Not double-counted.' })}
+              ${numInput('education', 'totalLeads', 'Total Leads Generated', inp.totalLeads, { step: 1 })}
+              ${numInput('education', 'attributedStudents', 'Attributed Paying Students', inp.attributedStudents, { step: 1, tip: 'Denominator for Marketing CAC = Ad Spend / Attributed Paying Students.' })}
+              ${numInput('education', 'additionalMarketingPerStudent', 'Addl. Marketing Cost / Student', inp.additionalMarketingPerStudent, { prefix: '₹', tip: 'Optional non-ad costs (e.g. brochure/onboarding kit). Kept separate from Ad Spend.' })}
+            </div>
+          </div>
+
+          <!-- Fixed Costs -->
+          <div class="card p-5 space-y-4">
+            <h3 class="text-sm font-bold text-slate-900 flex items-center gap-2 border-b border-slate-100 pb-2.5">
+              <i data-lucide="landmark" class="w-4 h-4 text-brand-600"></i> Fixed Batch Overhead
+            </h3>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+              ${numInput('education', 'batchOverhead', 'Batch Overhead', inp.batchOverhead, { prefix: '₹' })}
+              ${numInput('education', 'otherFixedExpenses', 'Other Fixed Expenses', inp.otherFixedExpenses, { prefix: '₹' })}
+            </div>
+          </div>
+        </div>
+
+        ${renderProfitabilityDashboardHTML(res, extraRows)}
+      `;
+      renderIndustryCharts(res);
+    }
+
+    // ========================================================================
+    // PAGE 3: REAL ESTATE CALCULATOR
+    // ========================================================================
+    function renderRealEstatePage() {
+      const inp = state.realEstate;
+      const res = E.calculateRealEstate(inp);
+
+      const extraRows = `
+        <tr class="text-xs bg-amber-50/50 text-amber-900"><td class="px-5 py-1.5">Informational: Gross Property Transaction Value (${E.formatCount(res.netClosedDeals, 1)} net deals — NOT revenue)</td><td class="px-4 py-1.5 text-right">${E.formatINR(inp.avgPropertyValue)}</td><td class="px-5 py-1.5 text-right font-medium">${E.formatINR(res.grossPropertyTransactionValue)}</td></tr>
+      `;
+
+      document.getElementById('page-content').innerHTML = `
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white border border-slate-200 rounded-xl px-4 py-3">
+          <div class="text-xs sm:text-sm text-slate-600">
+            <span class="font-semibold text-slate-900">Real Estate Unit Economics:</span> Revenue is strictly recognized from brokerage or developer fees — <span class="font-semibold text-slate-800">never</span> from total property value (${E.formatINR(inp.avgPropertyValue)}).
+          </div>
+          <div class="flex items-center gap-2 shrink-0 no-print">
+            <button data-clear-model="realEstate" class="px-3 py-1.5 rounded-lg text-xs font-medium text-red-700 bg-red-50 border border-red-200 hover:bg-red-100">Clear All Inputs</button>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-5">
+          <!-- Property & Brokerage Revenue -->
+          <div class="card p-5 space-y-4">
+            <h3 class="text-sm font-bold text-slate-900 flex items-center gap-2 border-b border-slate-100 pb-2.5">
+              <i data-lucide="building-2" class="w-4 h-4 text-brand-600"></i> Property & Brokerage Revenue
+            </h3>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+              ${selectInput('realEstate', 'revenueMethod', 'Revenue Calculation Method', inp.revenueMethod, [
+                { value: 'PROPERTY_X_BROKERAGE', label: 'Property Value × Brokerage Rate' },
+                { value: 'FIXED_PER_DEAL', label: 'Fixed Developer Revenue / Deal' }
+              ])}
+              ${numInput('realEstate', 'avgPropertyValue', 'Avg. Property Value (Info Only)', inp.avgPropertyValue, { prefix: '₹', tip: 'Used only to calculate brokerage % and informational GTV. Never counted as agency revenue.' })}
+              ${numInput('realEstate', 'brokerageRatePct', 'Brokerage Commission Rate', inp.brokerageRatePct, { suffix: '%', max: 100 })}
+              ${numInput('realEstate', 'fixedRevenuePerDeal', 'Fixed Revenue / Closed Deal', inp.fixedRevenuePerDeal, { prefix: '₹' })}
+              ${selectInput('realEstate', 'priceMode', 'Price Entry Mode', inp.priceMode, [
+                { value: 'GST_EXCLUSIVE', label: 'GST Exclusive' },
+                { value: 'GST_INCLUSIVE', label: 'GST Inclusive' }
+              ])}
+              ${numInput('realEstate', 'gstRatePct', 'GST Rate (Editable)', inp.gstRatePct, { suffix: '%', max: 100 })}
+              ${selectInput('realEstate', 'gstCreditTreatment', 'Input GST Treatment', inp.gstCreditTreatment, [
+                { value: 'RECOVERABLE', label: 'Recoverable GST (ITC)' },
+                { value: 'NON_RECOVERABLE', label: 'Non-Recoverable GST' }
+              ])}
+              <div>
+                <label class="block text-xs font-medium text-slate-700 mb-1">Optional Income Tax</label>
+                <div class="flex items-center gap-2">
+                  <input type="checkbox" data-model="realEstate" data-field="includeIncomeTax" ${inp.includeIncomeTax ? 'checked' : ''} class="w-4 h-4 rounded border-slate-300 text-brand-600" />
+                  <input type="number" min="0" max="100" step="0.5" value="${inp.incomeTaxRatePct}" data-model="realEstate" data-field="incomeTaxRatePct" class="input-base !py-1.5" ${inp.includeIncomeTax ? '' : 'disabled'} />
+                  <span class="text-xs text-slate-500">%</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Sales Funnel -->
+          <div class="card p-5 space-y-4">
+            <h3 class="text-sm font-bold text-slate-900 flex items-center gap-2 border-b border-slate-100 pb-2.5">
+              <i data-lucide="filter" class="w-4 h-4 text-brand-600"></i> Independent Sales Funnel Stages
+            </h3>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+              ${numInput('realEstate', 'totalLeads', 'Total Leads Generated', inp.totalLeads, { step: 1 })}
+              ${numInput('realEstate', 'qualifiedLeads', 'Qualified Leads', inp.qualifiedLeads, { step: 1 })}
+              ${numInput('realEstate', 'siteVisits', 'Site Visits', inp.siteVisits, { step: 1 })}
+              ${numInput('realEstate', 'bookings', 'Bookings', inp.bookings, { step: 1 })}
+              ${numInput('realEstate', 'grossClosedDeals', 'Gross Closed Deals', inp.grossClosedDeals, { step: 1 })}
+              ${numInput('realEstate', 'cancellationRatePct', 'Cancellation Rate', inp.cancellationRatePct, { suffix: '%', max: 100, tip: 'Cancelled deals are excluded from recognized revenue and per-deal variable costs.' })}
+            </div>
+            <!-- Live Funnel Metrics Bar -->
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-2 border-t border-slate-100 text-center">
+              <div class="bg-slate-50 rounded-lg p-2"><div class="text-[11px] text-slate-500">Lead → Qual</div><div class="text-xs font-bold text-slate-900">${E.formatPct(res.leadToQualifiedPct)}</div></div>
+              <div class="bg-slate-50 rounded-lg p-2"><div class="text-[11px] text-slate-500">Lead → Visit</div><div class="text-xs font-bold text-slate-900">${E.formatPct(res.leadToSiteVisitPct)}</div></div>
+              <div class="bg-slate-50 rounded-lg p-2"><div class="text-[11px] text-slate-500">Lead → Close</div><div class="text-xs font-bold text-slate-900">${E.formatPct(res.leadToClosePct)}</div></div>
+              <div class="bg-slate-50 rounded-lg p-2"><div class="text-[11px] text-slate-500">Cost / Visit</div><div class="text-xs font-bold text-slate-900">${E.formatINR(res.costPerSiteVisit)}</div></div>
+            </div>
+          </div>
+
+          <!-- Marketing Expenses -->
+          <div class="card p-5 space-y-4">
+            <h3 class="text-sm font-bold text-slate-900 flex items-center gap-2 border-b border-slate-100 pb-2.5">
+              <i data-lucide="megaphone" class="w-4 h-4 text-brand-600"></i> Marketing Expenses
+            </h3>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+              ${numInput('realEstate', 'totalAdSpend', 'Total Advertising Spend', inp.totalAdSpend, { prefix: '₹' })}
+              ${numInput('realEstate', 'additionalMarketingCosts', 'Additional Marketing Costs', inp.additionalMarketingCosts, { prefix: '₹' })}
+            </div>
+          </div>
+
+          <!-- Sales & Operational Expenses -->
+          <div class="card p-5 space-y-4">
+            <h3 class="text-sm font-bold text-slate-900 flex items-center gap-2 border-b border-slate-100 pb-2.5">
+              <i data-lucide="briefcase" class="w-4 h-4 text-brand-600"></i> Sales & Operational Expenses
+            </h3>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+              ${numInput('realEstate', 'salesCostPerNetDeal', 'Sales Cost / Net Closed Deal', inp.salesCostPerNetDeal, { prefix: '₹' })}
+              ${numInput('realEstate', 'otherVariableCostPerNetDeal', 'Closing / Variable Cost / Deal', inp.otherVariableCostPerNetDeal, { prefix: '₹' })}
+              ${numInput('realEstate', 'monthlyFixedOverhead', 'Monthly Fixed Overhead', inp.monthlyFixedOverhead, { prefix: '₹' })}
+              ${numInput('realEstate', 'otherFixedExpenses', 'Other Fixed Expenses', inp.otherFixedExpenses, { prefix: '₹' })}
+            </div>
+          </div>
+        </div>
+
+        ${renderProfitabilityDashboardHTML(res, extraRows)}
+      `;
+      renderIndustryCharts(res);
+    }
+
+    // ========================================================================
+    // PAGE 4: TRAVEL AGENCY CALCULATOR
+    // ========================================================================
+    function renderTravelPage() {
+      const inp = state.travel;
+      const res = E.calculateTravel(inp);
+
+      const extraRows = res.isCommissionOnly
+        ? `<tr class="text-xs bg-blue-50/50 text-blue-900"><td class="px-5 py-1.5">Informational: Supplier Pass-Through Value (Excluded from agency revenue & expenses)</td><td class="px-4 py-1.5 text-right">${res.netUnits > 0 ? E.formatINR(res.supplierPassThrough / res.netUnits) : 'N/A'}</td><td class="px-5 py-1.5 text-right font-medium">${E.formatINR(res.supplierPassThrough)}</td></tr>`
+        : `<tr class="text-xs text-slate-500"><td class="px-5 py-1.5 pl-9">Hotel & Transport (${E.formatINR(res.hotelExpenses)} + ${E.formatINR(res.transportExpenses)}) & Meals (${E.formatINR(res.mealExpenses)})</td><td class="px-4 py-1.5 text-right">${res.netUnits > 0 ? E.formatINR(res.supplierFulfillmentCost / res.netUnits) : 'N/A'}</td><td class="px-5 py-1.5 text-right">${E.formatINR(res.supplierFulfillmentCost)}</td></tr>`;
+
+      document.getElementById('page-content').innerHTML = `
+        <!-- Prominent Revenue Model Selector Banner -->
+        <div class="card p-4 sm:p-5 border-brand-200 bg-brand-50/40 space-y-3">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div>
+              <div class="text-xs font-semibold uppercase tracking-wider text-brand-700">Active Revenue Recognition Model</div>
+              <div class="text-sm font-bold text-slate-900 mt-0.5">${res.isCommissionOnly ? 'Model 2: Commission-Only Revenue (Intermediary)' : 'Model 1: Gross Package Revenue (Principal Tour Operator)'}</div>
+              <p class="text-xs text-slate-600 mt-0.5">
+                ${res.isCommissionOnly
+                  ? 'Recognizes only earned partner commission (' + inp.partnerCommissionRatePct + '%) as revenue. Supplier pass-through (' + E.formatINR(res.supplierPassThrough) + ') is excluded from both revenue and expenses.'
+                  : 'Recognizes full package selling price as revenue; hotel, transport, meal, and supplier fulfillment costs are recorded as direct expenses.'}
+              </p>
+            </div>
+            <div class="flex items-center gap-2 shrink-0 no-print">
+              <div class="inline-flex rounded-lg border border-slate-300 bg-white p-0.5">
+                <button data-travel-model="GROSS_PACKAGE" class="px-3 py-1.5 rounded-md text-xs font-semibold transition-colors ${!res.isCommissionOnly ? 'bg-brand-600 text-white' : 'text-slate-600 hover:text-slate-900'}">Gross Package</button>
+                <button data-travel-model="COMMISSION_ONLY" class="px-3 py-1.5 rounded-md text-xs font-semibold transition-colors ${res.isCommissionOnly ? 'bg-brand-600 text-white' : 'text-slate-600 hover:text-slate-900'}">Commission-Only</button>
+              </div>
+              <button data-clear-model="travel" class="px-3 py-1.5 rounded-lg text-xs font-medium text-red-700 bg-red-50 border border-red-200 hover:bg-red-100">Clear All</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-5">
+          <!-- Package & Revenue -->
+          <div class="card p-5 space-y-4">
+            <h3 class="text-sm font-bold text-slate-900 flex items-center gap-2 border-b border-slate-100 pb-2.5">
+              <i data-lucide="plane" class="w-4 h-4 text-brand-600"></i> Package, Volume & Tax Assumptions
+            </h3>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+              ${numInput('travel', 'sellingPricePerTraveler', 'Selling Price / Traveler', inp.sellingPricePerTraveler, { prefix: '₹' })}
+              ${numInput('travel', 'travelers', 'Number of Travelers', inp.travelers, { step: 1 })}
+              ${numInput('travel', 'bookings', 'Number of Bookings', inp.bookings, { step: 1 })}
+              ${numInput('travel', 'cancellationRatePct', 'Cancellation Rate', inp.cancellationRatePct, { suffix: '%', max: 100 })}
+              ${numInput('travel', 'partnerCommissionRatePct', 'Partner Commission Rate', inp.partnerCommissionRatePct, { suffix: '%', max: 100, tip: 'Used when Commission-Only Revenue model is active.' })}
+              ${numInput('travel', 'gstRatePct', 'GST Rate (' + res.taxableRevenueBasis + ')', inp.gstRatePct, { suffix: '%', max: 100, tip: 'Editable GST rate applied to ' + res.taxableRevenueBasis + '.' })}
+              ${selectInput('travel', 'priceMode', 'Price Entry Mode', inp.priceMode, [
+                { value: 'GST_EXCLUSIVE', label: 'GST Exclusive' },
+                { value: 'GST_INCLUSIVE', label: 'GST Inclusive' }
+              ])}
+              ${selectInput('travel', 'gstCreditTreatment', 'Input GST Treatment', inp.gstCreditTreatment, [
+                { value: 'RECOVERABLE', label: 'Recoverable GST (ITC)' },
+                { value: 'NON_RECOVERABLE', label: 'Non-Recoverable GST' }
+              ])}
+            </div>
+          </div>
+
+          <!-- Fulfillment Expenses -->
+          <div class="card p-5 space-y-4">
+            <h3 class="text-sm font-bold text-slate-900 flex items-center gap-2 border-b border-slate-100 pb-2.5">
+              <i data-lucide="luggage" class="w-4 h-4 text-brand-600"></i> Fulfillment Expenses ${res.isCommissionOnly ? '<span class="text-[11px] font-normal text-amber-600">(Supplier costs excluded in Commission-Only)</span>' : ''}
+            </h3>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+              ${numInput('travel', 'hotelSupplierCostPerTraveler', 'Hotel / Supplier Cost / Traveler', inp.hotelSupplierCostPerTraveler, { prefix: '₹' })}
+              ${numInput('travel', 'transportCostPerTraveler', 'Transport Cost / Traveler', inp.transportCostPerTraveler, { prefix: '₹' })}
+              ${numInput('travel', 'mealCostPerTraveler', 'Meal Cost / Traveler', inp.mealCostPerTraveler, { prefix: '₹' })}
+              ${numInput('travel', 'otherSupplierExpenses', 'Other Supplier Expenses (Total)', inp.otherSupplierExpenses, { prefix: '₹' })}
+              ${numInput('travel', 'otherVariableCostPerTraveler', 'Other Variable Cost / Traveler', inp.otherVariableCostPerTraveler, { prefix: '₹' })}
+              ${numInput('travel', 'gatewayFee', 'Payment Gateway Fee', inp.gatewayFee, { prefix: inp.gatewayBasis === 'FIXED_PER_TRAVELER' ? '₹' : '', suffix: inp.gatewayBasis === 'PCT_OF_COLLECTION' ? '%' : '' })}
+              ${selectInput('travel', 'gatewayBasis', 'Gateway Fee Basis', inp.gatewayBasis, [
+                { value: 'PCT_OF_COLLECTION', label: '% of Collections' },
+                { value: 'FIXED_PER_TRAVELER', label: 'Fixed / Traveler' }
+              ])}
+            </div>
+          </div>
+
+          <!-- Marketing & Acquisition -->
+          <div class="card p-5 space-y-4">
+            <h3 class="text-sm font-bold text-slate-900 flex items-center gap-2 border-b border-slate-100 pb-2.5">
+              <i data-lucide="megaphone" class="w-4 h-4 text-brand-600"></i> Marketing & Acquisition
+            </h3>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+              ${numInput('travel', 'totalAdSpend', 'Total Advertising Spend', inp.totalAdSpend, { prefix: '₹' })}
+              ${numInput('travel', 'totalEnquiries', 'Total Enquiries', inp.totalEnquiries, { step: 1 })}
+              ${numInput('travel', 'attributedBookings', 'Attributed Bookings', inp.attributedBookings, { step: 1 })}
+              <div class="bg-slate-50 rounded-lg p-3 flex flex-col justify-center">
+                <div class="text-[11px] text-slate-500">CAC per Booking / Cost per Enquiry</div>
+                <div class="text-sm font-bold text-slate-900 mt-0.5">${E.formatINR(res.cacPerBooking)} / ${E.formatINR(res.costPerEnquiry)}</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Fixed Expenses -->
+          <div class="card p-5 space-y-4">
+            <h3 class="text-sm font-bold text-slate-900 flex items-center gap-2 border-b border-slate-100 pb-2.5">
+              <i data-lucide="landmark" class="w-4 h-4 text-brand-600"></i> Fixed Overhead & Optional Tax
+            </h3>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+              ${numInput('travel', 'fixedTripOverhead', 'Fixed Trip Overhead', inp.fixedTripOverhead, { prefix: '₹' })}
+              ${numInput('travel', 'monthlyOperationalOverhead', 'Monthly Operational Overhead', inp.monthlyOperationalOverhead, { prefix: '₹' })}
+              ${numInput('travel', 'otherFixedExpenses', 'Other Fixed Expenses', inp.otherFixedExpenses, { prefix: '₹' })}
+              <div>
+                <label class="block text-xs font-medium text-slate-700 mb-1">Optional Income Tax</label>
+                <div class="flex items-center gap-2">
+                  <input type="checkbox" data-model="travel" data-field="includeIncomeTax" ${inp.includeIncomeTax ? 'checked' : ''} class="w-4 h-4 rounded border-slate-300 text-brand-600" />
+                  <input type="number" min="0" max="100" step="0.5" value="${inp.incomeTaxRatePct}" data-model="travel" data-field="incomeTaxRatePct" class="input-base !py-1.5" ${inp.includeIncomeTax ? '' : 'disabled'} />
+                  <span class="text-xs text-slate-500">%</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        ${renderProfitabilityDashboardHTML(res, extraRows)}
+      `;
+      renderIndustryCharts(res);
+    }
+
+    // ========================================================================
+    // PAGE 5: SCENARIO ANALYSIS
+    // ========================================================================
+    function calcByIndustry(ind, inp) {
+      if (ind === 'education') return E.calculateEducation(inp);
+      if (ind === 'realEstate') return E.calculateRealEstate(inp);
+      return E.calculateTravel(inp);
+    }
+
+    function renderScenarioPage() {
+      const ind = state.scenarioIndustry;
+      const list = state.scenarios[ind] || [];
+      const results = list.map(s => ({ id: s.id, name: s.name, inputs: s.inputs, calc: calcByIndustry(ind, s.inputs) }));
+
+      function scenarioField(scId, field, label, val, opts) {
+        const o = opts || {};
+        return `
+          <div>
+            <label class="block text-[11px] font-medium text-slate-600 mb-1">${escapeHtml(label)}</label>
+            <input type="number" min="0" step="${o.step || 'any'}" value="${val}" data-scen-id="${scId}" data-scen-field="${field}" class="input-base !py-1.5 !text-xs" />
+          </div>
+        `;
+      }
+
+      const cardsHtml = results.map(s => {
+        const i = s.inputs;
+        let fields = '';
+        if (ind === 'education') {
+          fields =
+            scenarioField(s.id, 'courseFee', 'Course Fee (₹)', i.courseFee) +
+            scenarioField(s.id, 'enrolledStudents', 'Students', i.enrolledStudents, { step: 1 }) +
+            scenarioField(s.id, 'totalAdSpend', 'Ad Spend (₹)', i.totalAdSpend) +
+            scenarioField(s.id, 'attributedStudents', 'Attributed Students', i.attributedStudents, { step: 1 }) +
+            scenarioField(s.id, 'refundPct', 'Refund Rate (%)', i.refundPct) +
+            scenarioField(s.id, 'trainerCost', 'Trainer Cost (₹)', i.trainerCost) +
+            scenarioField(s.id, 'salesCommission', 'Sales Comm. (₹)', i.salesCommission) +
+            scenarioField(s.id, 'batchOverhead', 'Fixed Overhead (₹)', i.batchOverhead);
+        } else if (ind === 'realEstate') {
+          fields =
+            scenarioField(s.id, 'avgPropertyValue', 'Property Value (₹)', i.avgPropertyValue) +
+            scenarioField(s.id, 'brokerageRatePct', 'Brokerage Rate (%)', i.brokerageRatePct) +
+            scenarioField(s.id, 'grossClosedDeals', 'Gross Closed Deals', i.grossClosedDeals, { step: 1 }) +
+            scenarioField(s.id, 'totalAdSpend', 'Ad Spend (₹)', i.totalAdSpend) +
+            scenarioField(s.id, 'totalLeads', 'Total Leads', i.totalLeads, { step: 1 }) +
+            scenarioField(s.id, 'cancellationRatePct', 'Cancellation (%)', i.cancellationRatePct) +
+            scenarioField(s.id, 'salesCostPerNetDeal', 'Sales Cost/Deal (₹)', i.salesCostPerNetDeal) +
+            scenarioField(s.id, 'monthlyFixedOverhead', 'Fixed Overhead (₹)', i.monthlyFixedOverhead);
+        } else {
+          fields =
+            scenarioField(s.id, 'sellingPricePerTraveler', 'Package Price (₹)', i.sellingPricePerTraveler) +
+            scenarioField(s.id, 'travelers', 'Travelers', i.travelers, { step: 1 }) +
+            scenarioField(s.id, 'totalAdSpend', 'Ad Spend (₹)', i.totalAdSpend) +
+            scenarioField(s.id, 'attributedBookings', 'Attributed Bookings', i.attributedBookings, { step: 1 }) +
+            scenarioField(s.id, 'cancellationRatePct', 'Cancellation (%)', i.cancellationRatePct) +
+            scenarioField(s.id, 'hotelSupplierCostPerTraveler', 'Hotel Cost/Pax (₹)', i.hotelSupplierCostPerTraveler) +
+            scenarioField(s.id, 'otherVariableCostPerTraveler', 'Other Var./Pax (₹)', i.otherVariableCostPerTraveler) +
+            scenarioField(s.id, 'fixedTripOverhead', 'Trip Overhead (₹)', i.fixedTripOverhead);
+        }
+
+        return `
+          <div class="card p-4 space-y-3">
+            <div class="flex items-center justify-between gap-2 border-b border-slate-100 pb-2.5">
+              <input type="text" value="${escapeHtml(s.name)}" data-scen-rename="${s.id}" class="font-bold text-sm text-slate-900 bg-transparent border-b border-transparent hover:border-slate-300 focus:border-brand-600 focus:outline-none w-full" aria-label="Scenario name" />
+              <div class="flex items-center gap-1 shrink-0">
+                <button data-scen-dup="${s.id}" title="Duplicate scenario" class="p-1.5 rounded hover:bg-slate-100 text-slate-500 hover:text-slate-800"><i data-lucide="copy" class="w-3.5 h-3.5"></i></button>
+                ${results.length > 1 ? `<button data-scen-del="${s.id}" title="Delete scenario" class="p-1.5 rounded hover:bg-red-50 text-slate-400 hover:text-red-600"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i></button>` : ''}
+              </div>
+            </div>
+            <div class="grid grid-cols-2 gap-2.5">${fields}</div>
+            <div class="pt-2 border-t border-slate-100 flex items-center justify-between text-xs">
+              <span class="text-slate-500">Operating Profit</span>
+              <span class="font-bold ${s.calc.operatingProfit >= 0 ? 'text-emerald-600' : 'text-red-600'}">${E.formatINR(s.calc.operatingProfit)} (${E.formatPct(s.calc.profitMarginPct)})</span>
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      const metrics = [
+        { label: 'Net Revenue', fn: c => E.formatINR(c.netRevenue) },
+        { label: 'Total Expenses', fn: c => E.formatINR(c.totalExpenses) },
+        { label: 'Total Contribution', fn: c => E.formatINR(c.totalContribution) },
+        { label: 'Operating Profit', fn: c => E.formatINR(c.operatingProfit), highlight: true },
+        { label: 'Profit Margin', fn: c => E.formatPct(c.profitMarginPct) },
+        { label: 'Marketing CAC', fn: c => E.formatINR(c.marketingCac) },
+        { label: 'Break-even Units', fn: c => c.breakEven.achievable ? (E.formatCount(c.breakEven.units) + ' ' + c.unitLabelPlural) : 'Not Achievable' }
+      ];
+
+      document.getElementById('page-content').innerHTML = `
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div class="inline-flex rounded-lg border border-slate-200 bg-white p-1 shadow-sm">
+            ${[
+              { id: 'education', label: 'Education' },
+              { id: 'realEstate', label: 'Real Estate' },
+              { id: 'travel', label: 'Travel Agency' }
+            ].map(tab => `
+              <button data-scen-ind="${tab.id}" class="px-3.5 py-1.5 rounded-md text-xs font-semibold transition-colors ${ind === tab.id ? 'bg-brand-600 text-white' : 'text-slate-600 hover:text-slate-900'}">${tab.label}</button>
+            `).join('')}
+          </div>
+          <div class="flex items-center gap-2">
+            <button id="scen-sync-current" class="px-3 py-1.5 rounded-lg text-xs font-medium bg-white border border-slate-300 text-slate-700 hover:bg-slate-50">Sync Base from Calculator</button>
+            <button id="scen-restore-defaults" class="px-3 py-1.5 rounded-lg text-xs font-medium bg-white border border-slate-300 text-slate-700 hover:bg-slate-50">Restore Scenario Defaults</button>
+          </div>
+        </div>
+
+        <!-- Editable Scenario Cards -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">${cardsHtml}</div>
+
+        <!-- Comparison Table -->
+        <div class="card overflow-hidden">
+          <div class="px-5 py-3.5 border-b border-slate-200 bg-slate-50/70">
+            <h2 class="text-sm font-semibold text-slate-900">Scenario Comparison Matrix (Calculated Live via Deterministic Engine)</h2>
+          </div>
+          <div class="overflow-x-auto">
+            <table class="w-full text-sm text-left">
+              <thead class="text-xs uppercase text-slate-500 bg-slate-50 border-b border-slate-200">
+                <tr>
+                  <th class="px-5 py-3 font-semibold">Metric</th>
+                  ${results.map(r => `<th class="px-4 py-3 font-semibold text-right">${escapeHtml(r.name)}</th>`).join('')}
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-slate-100">
+                ${metrics.map(m => `
+                  <tr class="${m.highlight ? 'bg-slate-50/80 font-bold' : ''}">
+                    <td class="px-5 py-3 text-slate-800 font-medium">${m.label}</td>
+                    ${results.map(r => {
+                      const cls = m.highlight ? (r.calc.operatingProfit >= 0 ? 'text-emerald-700' : 'text-red-600') : 'text-slate-700';
+                      return `<td class="px-4 py-3 text-right ${cls}">${escapeHtml(m.fn(r.calc))}</td>`;
+                    }).join('')}
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Scenario Charts -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-5">
+          <div class="card p-5">
+            <h3 class="text-sm font-semibold text-slate-900 mb-3">Revenue vs. Operating Profit by Scenario</h3>
+            <div class="relative h-64"><canvas id="chart-scenario-profit"></canvas></div>
+          </div>
+          <div class="card p-5">
+            <h3 class="text-sm font-semibold text-slate-900 mb-3">Contribution Margin vs. Profit Margin (%)</h3>
+            <div class="relative h-64"><canvas id="chart-scenario-margin"></canvas></div>
+          </div>
+        </div>
+      `;
+      renderScenarioCharts(results);
+    }
+
+    // ========================================================================
+    // PAGE 6: AI BUSINESS ADVISOR & WHAT-IF ENGINE
+    // ========================================================================
+    function renderAdvisorPage() {
+      const ind = state.advisorIndustry;
+      const baseInputs = state[ind];
+      const res = calcByIndustry(ind, baseInputs);
+      const advice = E.generateRuleBasedAdvice(res);
+      const whatIf = E.runWhatIf(ind, baseInputs, state.activeWhatIf);
+      const deltaProfit = whatIf.simulated.operatingProfit - whatIf.base.operatingProfit;
+      const deltaRev = whatIf.simulated.netRevenue - whatIf.base.netRevenue;
+
+      const whatIfButtons = [
+        { id: 'cac_up_20', label: 'CAC +20%' },
+        { id: 'ad_down_20', label: 'Ad Spend -20%' },
+        { id: 'conv_up_10', label: 'Conversion +10%' },
+        { id: 'price_up_5', label: 'Price +5%' },
+        { id: 'supplier_up_10', label: 'Delivery / Supplier +10%' },
+        { id: 'cancel_up_5', label: 'Refunds / Cancels +5pp' }
+      ];
+
+      document.getElementById('page-content').innerHTML = `
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div class="inline-flex rounded-lg border border-slate-200 bg-white p-1 shadow-sm">
+            ${[
+              { id: 'education', label: 'Education' },
+              { id: 'realEstate', label: 'Real Estate' },
+              { id: 'travel', label: 'Travel Agency' }
+            ].map(tab => `
+              <button data-adv-ind="${tab.id}" class="px-3.5 py-1.5 rounded-md text-xs font-semibold transition-colors ${ind === tab.id ? 'bg-brand-600 text-white' : 'text-slate-600 hover:text-slate-900'}">${tab.label}</button>
+            `).join('')}
+          </div>
+          <div class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium bg-indigo-50 text-indigo-800 border border-indigo-200">
+            <i data-lucide="cpu" class="w-3.5 h-3.5"></i>
+            <span>Active Mode: ${escapeHtml(advice.source)}</span>
+          </div>
+        </div>
+
+        <!-- Business Summary & Assessment -->
+        <div class="card p-5 space-y-3 border-l-4 ${res.operatingProfit >= 0 ? 'border-l-emerald-500' : 'border-l-red-500'}">
+          <div class="flex items-center justify-between">
+            <h2 class="text-base font-bold text-slate-900">1. Business Performance Explanation</h2>
+            <span class="text-xs text-slate-500">Grounded strictly in current ${escapeHtml(res.label)} calculator outputs</span>
+          </div>
+          <p class="text-sm text-slate-800 leading-relaxed">${escapeHtml(advice.summary)}</p>
+          <p class="text-sm text-slate-600 leading-relaxed">${escapeHtml(advice.profitabilityAssessment)}</p>
+        </div>
+
+        <!-- Top 3 Cost Drivers -->
+        <div class="space-y-3">
+          <h2 class="text-base font-bold text-slate-900">2. Top 3 Cost Drivers</h2>
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            ${advice.topCostDrivers.length ? advice.topCostDrivers.map((d, idx) => `
+              <div class="card p-4 space-y-2.5">
+                <div class="flex items-center justify-between">
+                  <span class="px-2 py-0.5 rounded text-xs font-bold bg-slate-100 text-slate-700">#${idx + 1} Driver</span>
+                  <span class="text-xs font-semibold text-brand-700">${E.formatPct(d.pctOfTotal)} of expenses</span>
+                </div>
+                <div class="text-sm font-bold text-slate-900">${escapeHtml(d.label)}</div>
+                <div class="text-xl font-bold text-slate-900">${E.formatINR(d.amount)}</div>
+                <p class="text-xs text-slate-600">${escapeHtml(d.whyItMatters)}</p>
+                <div class="pt-2 border-t border-slate-100 text-xs text-emerald-800 bg-emerald-50/70 rounded-lg p-2.5">
+                  <span class="font-semibold">Optimization:</span> ${escapeHtml(d.optimization)}
+                </div>
+              </div>
+            `).join('') : '<div class="card p-4 text-sm text-slate-500 md:col-span-3">No active expenses recorded in this model.</div>'}
+          </div>
+        </div>
+
+        <!-- Interactive What-If Analysis -->
+        <div class="card p-5 space-y-4">
+          <div>
+            <h2 class="text-base font-bold text-slate-900">3. Interactive What-If Sensitivity Analysis</h2>
+            <p class="text-xs text-slate-500 mt-0.5">Every simulation runs through the deterministic calculation engine — zero AI estimation.</p>
+          </div>
+          <div class="flex flex-wrap gap-2">
+            ${whatIfButtons.map(b => `
+              <button data-whatif="${b.id}" class="px-3 py-1.5 rounded-lg text-xs font-semibold border transition-colors ${state.activeWhatIf === b.id ? 'bg-brand-600 text-white border-brand-600' : 'bg-white text-slate-700 border-slate-300 hover:bg-slate-50'}">
+                What if ${escapeHtml(b.label)}?
+              </button>
+            `).join('')}
+          </div>
+
+          <div class="rounded-xl bg-slate-50 border border-slate-200 p-4 space-y-3">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+              <div class="text-sm font-bold text-slate-900">Scenario: ${escapeHtml(whatIf.label)}</div>
+              <span class="px-2.5 py-1 rounded-full text-xs font-bold ${deltaProfit >= 0 ? 'bg-emerald-100 text-emerald-800' : 'bg-red-100 text-red-800'}">
+                Operating Profit Impact: ${deltaProfit >= 0 ? '+' : ''}${E.formatINR(deltaProfit)}
+              </span>
+            </div>
+            <div class="grid grid-cols-1 sm:grid-cols-4 gap-3 text-xs">
+              <div class="bg-white rounded-lg p-3 border border-slate-200">
+                <div class="text-slate-500">Net Revenue</div>
+                <div class="font-bold text-slate-900 text-sm mt-1">${E.formatINR(whatIf.simulated.netRevenue)}</div>
+                <div class="text-[11px] ${deltaRev >= 0 ? 'text-emerald-600' : 'text-red-600'}">vs ${E.formatINR(whatIf.base.netRevenue)} (${deltaRev >= 0 ? '+' : ''}${E.formatINR(deltaRev)})</div>
+              </div>
+              <div class="bg-white rounded-lg p-3 border border-slate-200">
+                <div class="text-slate-500">Operating Profit</div>
+                <div class="font-bold text-sm mt-1 ${whatIf.simulated.operatingProfit >= 0 ? 'text-emerald-700' : 'text-red-600'}">${E.formatINR(whatIf.simulated.operatingProfit)}</div>
+                <div class="text-[11px] text-slate-500">vs ${E.formatINR(whatIf.base.operatingProfit)}</div>
+              </div>
+              <div class="bg-white rounded-lg p-3 border border-slate-200">
+                <div class="text-slate-500">Profit Margin</div>
+                <div class="font-bold text-slate-900 text-sm mt-1">${E.formatPct(whatIf.simulated.profitMarginPct)}</div>
+                <div class="text-[11px] text-slate-500">vs ${E.formatPct(whatIf.base.profitMarginPct)}</div>
+              </div>
+              <div class="bg-white rounded-lg p-3 border border-slate-200">
+                <div class="text-slate-500">Break-even Volume</div>
+                <div class="font-bold text-slate-900 text-sm mt-1">${whatIf.simulated.breakEven.achievable ? (E.formatCount(whatIf.simulated.breakEven.units) + ' ' + whatIf.simulated.unitLabelPlural) : 'Not Achievable'}</div>
+                <div class="text-[11px] text-slate-500">vs ${whatIf.base.breakEven.achievable ? whatIf.base.breakEven.units : 'N/A'}</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Risks & Actionable Recommendations -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-5">
+          <div class="card p-5 space-y-3">
+            <h2 class="text-sm font-bold text-slate-900 flex items-center gap-2"><i data-lucide="shield-alert" class="w-4 h-4 text-amber-600"></i> Main Financial Risks</h2>
+            <ul class="space-y-2 text-sm text-slate-700">
+              ${advice.mainRisks.map(r => `<li class="flex items-start gap-2"><span class="w-1.5 h-1.5 rounded-full bg-amber-500 mt-2 shrink-0"></span><span>${escapeHtml(r)}</span></li>`).join('')}
+            </ul>
+          </div>
+          <div class="card p-5 space-y-3">
+            <h2 class="text-sm font-bold text-slate-900 flex items-center gap-2"><i data-lucide="lightbulb" class="w-4 h-4 text-brand-600"></i> 3 Actionable Recommendations</h2>
+            <ol class="space-y-2.5 text-sm text-slate-700">
+              ${advice.recommendations.map((rec, i) => `<li class="flex items-start gap-2.5"><span class="w-5 h-5 rounded-full bg-brand-100 text-brand-700 text-xs font-bold flex items-center justify-center shrink-0 mt-0.5">${i + 1}</span><span>${escapeHtml(rec)}</span></li>`).join('')}
+            </ol>
+          </div>
+        </div>
+      `;
+    }
+
+    // ========================================================================
+    // PAGE 7: FINANCIAL GLOSSARY & FORMULA REFERENCE
+    // ========================================================================
+    const GLOSSARY_TERMS = [
+      { term: 'Unit Economics', def: 'The direct revenues and costs associated with a single business unit (1 student, 1 closed deal, or 1 traveler).', ex: 'If a course earns ₹25,000 net fee and costs ₹15,750 in variable costs per student, unit contribution is ₹9,250.' },
+      { term: 'Net Revenue', def: 'Recognized business revenue after deducting discounts, refunds/cancellations, and indirect taxes (GST).', ex: '₹8,85,000 collected (incl. 18% GST) equals ₹7,50,000 Net Revenue and ₹1,35,000 GST.' },
+      { term: 'Gross Profit', def: 'Net Revenue minus Direct Service or Fulfillment Costs (e.g., LMS/Trainer/Gateway or Hotel/Transport).', ex: '₹7,00,000 package revenue minus ₹5,00,000 supplier costs = ₹2,00,000 Gross Profit.' },
+      { term: 'Contribution Margin', def: 'Percentage of Net Revenue remaining after all variable delivery, sales, and marketing costs to cover fixed overhead.', ex: '₹2,77,500 Contribution ÷ ₹7,50,000 Net Revenue = 37.0% Contribution Margin.' },
+      { term: 'Operating Profit', def: 'Total Contribution minus Fixed Period or Batch Overhead (before optional income tax).', ex: '₹2,77,500 Contribution minus ₹30,000 batch overhead = ₹2,47,500 Operating Profit.' },
+      { term: 'Profit Margin', def: 'Operating Profit expressed as a percentage of Net Revenue.', ex: '₹1,80,000 Operating Profit ÷ ₹3,60,000 Net Brokerage Revenue = 50.0% Profit Margin.' },
+      { term: 'Break-even Point', def: 'Minimum paying units required for Total Contribution to equal Fixed Overhead (CEILING(Fixed / Contribution per Unit)). Undefined if Contribution per Unit ≤ ₹0.', ex: '₹35,000 fixed overhead ÷ ₹5,000 contribution/traveler = 7 travelers to break even.' },
+      { term: 'Customer Acquisition Cost (CAC)', def: 'Total Advertising Spend divided by Attributed Paying Customers.', ex: '₹60,000 ad spend ÷ 3 closed real estate deals = ₹20,000 Marketing CAC per deal.' },
+      { term: 'Cost Per Lead (CPL)', def: 'Total Advertising Spend divided by Total Leads or Enquiries generated.', ex: '₹60,000 ad spend ÷ 300 leads = ₹200 CPL.' },
+      { term: 'Conversion Rate', def: 'Percentage of leads or enquiries that advance to a downstream funnel stage or paying customer.', ex: '3 closed deals from 300 leads = 1.0% Lead-to-Close conversion rate.' },
+      { term: 'Revenue Per Customer', def: 'Net Revenue divided by Net Paying Units (students, closed deals, or travelers).', ex: '₹3,60,000 brokerage revenue ÷ 3 net deals = ₹1,20,000 revenue per closed deal.' },
+      { term: 'Variable Costs', def: 'Costs that scale directly with customer volume (e.g., LMS per student, hotel cost per traveler, sales commissions).', ex: '₹25,000 supplier cost per traveler × 20 travelers = ₹5,00,000.' },
+      { term: 'Fixed Costs', def: 'Overhead expenses that stay constant regardless of short-term unit volume (e.g., office rent, monthly software, fixed batch support).', ex: '₹45,000 monthly office & CRM overhead.' },
+      { term: 'GST (Goods & Services Tax)', def: 'Indirect tax collected on behalf of the government; excluded from recognized Net Revenue.', ex: '18% GST on ₹1,20,000 brokerage = ₹21,600 collected and remitted.' },
+      { term: 'Recoverable Input GST (ITC)', def: 'GST paid on eligible business purchases that can offset Output GST liability — NOT treated as a business expense.', ex: '₹27,000 GST paid on ₹1,50,000 ad spend reduces net GST payable rather than inflating marketing expense.' },
+      { term: 'Refund Rate', def: 'Percentage of enrolled customers who receive refunds, reducing both net units and recognized revenue.', ex: '10% refund on 30 enrolled students leaves 27 net paying students.' },
+      { term: 'Cancellation Rate', def: 'Percentage of gross closed deals or travel bookings cancelled before fulfillment, excluded from recognized revenue.', ex: '20% cancellation on 10 gross deals leaves 8 net closed deals.' },
+      { term: 'Revenue Recognition', def: 'Accounting rule defining what counts as business revenue (e.g., brokerage fee only in Real Estate; commission-only vs. gross package in Travel).', ex: 'On a ₹60,00,000 home at 2% brokerage, recognized revenue is ₹1,20,000 — never ₹60,00,000.' }
+    ];
+
+    const FORMULA_REFERENCE = [
+      { name: 'Net Revenue', formula: 'Customer Collections (after discounts & refunds) − Indirect Taxes (GST)' },
+      { name: 'GST Inclusive Extraction', formula: 'Net Revenue = Collections ÷ (1 + GST Rate)  |  GST = Collections − Net Revenue' },
+      { name: 'Gross Profit', formula: 'Net Revenue − Direct Delivery / Fulfillment Costs' },
+      { name: 'Total Contribution', formula: 'Gross Profit − Variable Sales & Acquisition Costs' },
+      { name: 'Contribution Per Unit', formula: 'Total Contribution ÷ Net Paying Units' },
+      { name: 'Contribution Margin (%)', formula: '(Total Contribution ÷ Net Revenue) × 100' },
+      { name: 'Operating Profit', formula: 'Total Contribution − Fixed Period / Batch Overhead' },
+      { name: 'Profit Per Unit', formula: 'Operating Profit ÷ Net Paying Units' },
+      { name: 'Profit Margin (%)', formula: '(Operating Profit ÷ Net Revenue) × 100' },
+      { name: 'Cost Per Lead (CPL)', formula: 'Total Advertising Spend ÷ Total Leads' },
+      { name: 'Marketing CAC', formula: 'Total Advertising Spend ÷ Attributed Paying Customers' },
+      { name: 'Break-even Units', formula: 'CEILING(Fixed Overhead ÷ Contribution Per Unit)  [Only when Contribution Per Unit > 0]' }
+    ];
+
+    function renderGlossaryPage() {
+      const q = (state.glossarySearch || '').trim().toLowerCase();
+      const filtered = GLOSSARY_TERMS.filter(t =>
+        !q || t.term.toLowerCase().includes(q) || t.def.toLowerCase().includes(q)
+      );
+
+      document.getElementById('page-content').innerHTML = `
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div class="inline-flex rounded-lg border border-slate-200 bg-white p-1 shadow-sm">
+            <button data-gloss-tab="glossary" class="px-3.5 py-1.5 rounded-md text-xs font-semibold ${state.glossaryTab === 'glossary' ? 'bg-brand-600 text-white' : 'text-slate-600'}">Financial Glossary (${GLOSSARY_TERMS.length})</button>
+            <button data-gloss-tab="formulas" class="px-3.5 py-1.5 rounded-md text-xs font-semibold ${state.glossaryTab === 'formulas' ? 'bg-brand-600 text-white' : 'text-slate-600'}">Formula Reference (${FORMULA_REFERENCE.length})</button>
+          </div>
+          ${state.glossaryTab === 'glossary' ? `
+            <div class="relative w-full sm:w-72">
+              <i data-lucide="search" class="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2"></i>
+              <input id="glossary-search-input" type="text" placeholder="Filter metrics..." value="${escapeHtml(state.glossarySearch)}" class="input-base pl-9 !py-1.5" />
+            </div>
+          ` : ''}
+        </div>
+
+        ${state.glossaryTab === 'glossary' ? `
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            ${filtered.map(t => `
+              <div class="card p-4 space-y-2">
+                <h3 class="text-sm font-bold text-slate-900">${escapeHtml(t.term)}</h3>
+                <p class="text-xs sm:text-sm text-slate-600 leading-relaxed">${escapeHtml(t.def)}</p>
+                <div class="text-xs bg-slate-50 border border-slate-200/80 rounded-lg px-3 py-2 text-slate-700">
+                  <span class="font-semibold text-brand-700">INR Example:</span> ${escapeHtml(t.ex)}
+                </div>
+              </div>
+            `).join('') || '<div class="card p-6 text-sm text-slate-500 md:col-span-2">No glossary terms match your search.</div>'}
+          </div>
+        ` : `
+          <div class="card overflow-hidden">
+            <div class="px-5 py-3.5 border-b border-slate-200 bg-slate-50/70">
+              <h2 class="text-sm font-semibold text-slate-900">Standardized Deterministic Formula Reference</h2>
+            </div>
+            <div class="divide-y divide-slate-100">
+              ${FORMULA_REFERENCE.map(f => `
+                <div class="px-5 py-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                  <div class="text-sm font-semibold text-slate-900">${escapeHtml(f.name)}</div>
+                  <code class="text-xs bg-slate-100 text-slate-800 px-3 py-1.5 rounded-lg font-mono">${escapeHtml(f.formula)}</code>
+                </div>
+              `).join('')}
+            </div>
+          </div>
+        `}
+      `;
+    }
+
+    // ========================================================================
+    // PAGE 8: SETTINGS
+    // ========================================================================
+    function renderSettingsPage() {
+      const s = state.settings;
+      document.getElementById('page-content').innerHTML = `
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-5">
+          <!-- Workspace & Alert Thresholds -->
+          <div class="card p-5 space-y-4">
+            <h2 class="text-sm font-bold text-slate-900 border-b border-slate-100 pb-2.5">Workspace & Profitability Alert Thresholds</h2>
+            <div class="space-y-3.5">
+              <div>
+                <label class="block text-xs font-medium text-slate-700 mb-1">Reporting Period Label (Shown on Exports)</label>
+                <input type="text" id="setting-period" value="${escapeHtml(s.reportingPeriod)}" class="input-base" />
+              </div>
+              <div class="grid grid-cols-3 gap-3">
+                <div>
+                  <label class="block text-xs font-medium text-slate-700 mb-1">Education Min Margin (%)</label>
+                  <input type="number" min="0" max="100" value="${state.education.targetMarginPct}" data-model="education" data-field="targetMarginPct" class="input-base" />
+                </div>
+                <div>
+                  <label class="block text-xs font-medium text-slate-700 mb-1">Real Estate Min Margin (%)</label>
+                  <input type="number" min="0" max="100" value="${state.realEstate.targetMarginPct}" data-model="realEstate" data-field="targetMarginPct" class="input-base" />
+                </div>
+                <div>
+                  <label class="block text-xs font-medium text-slate-700 mb-1">Travel Min Margin (%)</label>
+                  <input type="number" min="0" max="100" value="${state.travel.targetMarginPct}" data-model="travel" data-field="targetMarginPct" class="input-base" />
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Secure AI & Cloud Integration Configuration State -->
+          <div class="card p-5 space-y-4">
+            <h2 class="text-sm font-bold text-slate-900 border-b border-slate-100 pb-2.5">Integrations & Persistence Status</h2>
+            <div class="space-y-3 text-xs sm:text-sm">
+              <div class="p-3 rounded-lg bg-emerald-50 border border-emerald-200 flex items-start gap-2.5">
+                <i data-lucide="hard-drive" class="w-4 h-4 text-emerald-700 shrink-0 mt-0.5"></i>
+                <div>
+                  <div class="font-semibold text-emerald-900">Local Workspace Persistence: Active</div>
+                  <div class="text-xs text-emerald-800 mt-0.5">All calculator assumptions and scenarios save automatically to browser local storage. No login required.</div>
+                </div>
+              </div>
+              <div class="p-3 rounded-lg bg-slate-50 border border-slate-200 flex items-start gap-2.5">
+                <i data-lucide="sparkles" class="w-4 h-4 text-slate-600 shrink-0 mt-0.5"></i>
+                <div>
+                  <div class="font-semibold text-slate-900">AI Advisor Backend: Rule-Based Fallback Active</div>
+                  <div class="text-xs text-slate-600 mt-0.5">API keys are never stored in browser code. Connect a secure server-side Edge Function endpoint to enable LLM narrative explanations alongside deterministic engine outputs.</div>
+                </div>
+              </div>
+              <div class="p-3 rounded-lg bg-slate-50 border border-slate-200 flex items-start gap-2.5">
+                <i data-lucide="database" class="w-4 h-4 text-slate-600 shrink-0 mt-0.5"></i>
+                <div>
+                  <div class="font-semibold text-slate-900">Cloud Sync (Supabase): Not Configured</div>
+                  <div class="text-xs text-slate-600 mt-0.5">Workspace state is structured for drop-in Supabase persistence and optional user authentication when deployed.</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Data Management -->
+          <div class="card p-5 space-y-3 lg:col-span-2">
+            <h2 class="text-sm font-bold text-slate-900 border-b border-slate-100 pb-2.5">Data Management</h2>
+            <div class="flex flex-wrap gap-3">
+              <button id="export-json-btn" class="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg text-xs font-semibold bg-white border border-slate-300 text-slate-700 hover:bg-slate-50">
+                <i data-lucide="download" class="w-3.5 h-3.5"></i> Download Workspace Backup (JSON)
+              </button>
+              <button id="reset-all-workspace-btn" class="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg text-xs font-semibold bg-red-600 text-white hover:bg-red-700">
+                <i data-lucide="rotate-ccw" class="w-3.5 h-3.5"></i> Reset Entire Workspace to Sample Defaults
+              </button>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    // ========================================================================
+    // MAIN ROUTER & EVENT DELEGATION
+    // ========================================================================
+    const PAGE_META = {
+      overview: { title: 'Business Overview', sub: 'Understand Your Numbers. Improve Your Profitability.', showReset: false },
+      education: { title: 'Education Calculator', sub: 'Online Courses, Cohorts & Coaching Institutes', showReset: true },
+      realEstate: { title: 'Real Estate Calculator', sub: 'Brokerage & Developer Lead Generation Economics', showReset: true },
+      travel: { title: 'Travel Agency Calculator', sub: 'Gross Package vs. Commission-Only Tour Economics', showReset: true },
+      scenarios: { title: 'Scenario Analysis', sub: 'Compare Base, Best & Worst Case Assumptions Live', showReset: false },
+      advisor: { title: 'AI Business Advisor', sub: 'Deterministic Explanations, Cost Drivers & What-If Analysis', showReset: false },
+      glossary: { title: 'Financial Glossary & Formulas', sub: 'Plain-English Definitions & INR Examples', showReset: false },
+      settings: { title: 'Settings', sub: 'Alert Thresholds, Workspace Persistence & Integrations', showReset: false }
+    };
+
+    function render() {
+      destroyCharts();
+      const meta = PAGE_META[state.activePage] || PAGE_META.overview;
+      document.getElementById('topbar-title').textContent = meta.title;
+      document.getElementById('topbar-subtitle').textContent = meta.sub;
+
+      const resetBtn = document.getElementById('topbar-reset-btn');
+      if (meta.showReset) {
+        resetBtn.classList.remove('hidden');
+        resetBtn.classList.add('inline-flex');
+      } else {
+        resetBtn.classList.add('hidden');
+        resetBtn.classList.remove('inline-flex');
+      }
+
+      document.querySelectorAll('#sidebar-nav .nav-item').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.page === state.activePage);
+      });
+
+      if (state.activePage === 'overview') renderOverviewPage();
+      else if (state.activePage === 'education') renderEducationPage();
+      else if (state.activePage === 'realEstate') renderRealEstatePage();
+      else if (state.activePage === 'travel') renderTravelPage();
+      else if (state.activePage === 'scenarios') renderScenarioPage();
+      else if (state.activePage === 'advisor') renderAdvisorPage();
+      else if (state.activePage === 'glossary') renderGlossaryPage();
+      else if (state.activePage === 'settings') renderSettingsPage();
+
+      if (window.lucide) window.lucide.createIcons();
+    }
+
+    function navigate(page) {
+      state.activePage = page;
+      saveState();
+      closeDrawer();
+      render();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    // Mobile drawer controls
+    function openDrawer() {
+      document.getElementById('sidebar').classList.remove('-translate-x-full');
+      document.getElementById('mobile-overlay').classList.remove('hidden');
+    }
+    function closeDrawer() {
+      document.getElementById('sidebar').classList.add('-translate-x-full');
+      document.getElementById('mobile-overlay').classList.add('hidden');
+    }
+
+    document.getElementById('open-drawer-btn').addEventListener('click', openDrawer);
+    document.getElementById('close-drawer-btn').addEventListener('click', closeDrawer);
+    document.getElementById('mobile-overlay').addEventListener('click', closeDrawer);
+
+    document.getElementById('modal-cancel-btn').addEventListener('click', closeConfirmModal);
+    document.getElementById('modal-confirm-btn').addEventListener('click', () => {
+      const cb = modalConfirmCallback;
+      closeConfirmModal();
+      if (cb) cb();
+    });
+
+    document.getElementById('sidebar-nav').addEventListener('click', e => {
+      const btn = e.target.closest('[data-page]');
+      if (btn) navigate(btn.dataset.page);
+    });
+
+    document.getElementById('topbar-reset-btn').addEventListener('click', () => {
+      const p = state.activePage;
+      if (p === 'education') state.education = JSON.parse(JSON.stringify(E.DEFAULT_EDUCATION_INPUTS));
+      else if (p === 'realEstate') state.realEstate = JSON.parse(JSON.stringify(E.DEFAULT_REAL_ESTATE_INPUTS));
+      else if (p === 'travel') state.travel = JSON.parse(JSON.stringify(E.DEFAULT_TRAVEL_INPUTS));
+      else return;
+      saveState();
+      render();
+      showToast('Reset to assignment sample defaults');
+    });
+
+    // Global delegated handlers inside #page-content
+    const pageEl = document.getElementById('page-content');
+
+    pageEl.addEventListener('click', e => {
+      const navTarget = e.target.closest('[data-nav-target]');
+      if (navTarget) { navigate(navTarget.dataset.navTarget); return; }
+
+      const gotoAdv = e.target.closest('[data-goto-advisor]');
+      if (gotoAdv) {
+        state.advisorIndustry = gotoAdv.dataset.gotoAdvisor;
+        navigate('advisor');
+        return;
+      }
+
+      const travelModel = e.target.closest('[data-travel-model]');
+      if (travelModel) {
+        state.travel.revenueModel = travelModel.dataset.travelModel;
+        state.travel.gstRatePct = state.travel.revenueModel === 'COMMISSION_ONLY' ? 18 : 5;
+        saveState();
+        render();
+        showToast('Switched to ' + (state.travel.revenueModel === 'COMMISSION_ONLY' ? 'Commission-Only Revenue (18% GST default)' : 'Gross Package Revenue (5% GST default)'));
+        return;
+      }
+
+      const clearBtn = e.target.closest('[data-clear-model]');
+      if (clearBtn) {
+        const model = clearBtn.dataset.clearModel;
+        openConfirmModal('Clear All Inputs?', 'This will set all numeric inputs in this calculator to 0 so you can start from a blank slate.', () => {
+          Object.keys(state[model]).forEach(k => {
+            if (typeof state[model][k] === 'number' && k !== 'gstRatePct' && k !== 'incomeTaxRatePct' && k !== 'targetMarginPct') {
+              state[model][k] = 0;
+            }
+          });
+          saveState();
+          render();
+          showToast('All inputs cleared to 0');
+        });
+        return;
+      }
+
+      const pdfBtn = e.target.closest('[data-export-pdf]');
+      if (pdfBtn) { exportPDF(pdfBtn.dataset.exportPdf); return; }
+
+      const csvBtn = e.target.closest('[data-export-csv]');
+      if (csvBtn) { exportCSV(csvBtn.dataset.exportCsv); return; }
+
+      const printBtn = e.target.closest('[data-print-report]');
+      if (printBtn) { window.print(); return; }
+
+      const scenInd = e.target.closest('[data-scen-ind]');
+      if (scenInd) { state.scenarioIndustry = scenInd.dataset.scenInd; saveState(); render(); return; }
+
+      const scenDup = e.target.closest('[data-scen-dup]');
+      if (scenDup) {
+        const list = state.scenarios[state.scenarioIndustry];
+        const orig = list.find(x => x.id === scenDup.dataset.scenDup);
+        if (orig) {
+          list.push({ id: 'sc-' + Date.now(), name: orig.name + ' (Copy)', inputs: JSON.parse(JSON.stringify(orig.inputs)) });
+          saveState();
+          render();
+          showToast('Scenario duplicated');
+        }
+        return;
+      }
+
+      const scenDel = e.target.closest('[data-scen-del]');
+      if (scenDel) {
+        const id = scenDel.dataset.scenDel;
+        openConfirmModal('Delete Scenario?', 'Remove this scenario from the comparison?', () => {
+          state.scenarios[state.scenarioIndustry] = state.scenarios[state.scenarioIndustry].filter(x => x.id !== id);
+          saveState();
+          render();
+          showToast('Scenario deleted');
+        });
+        return;
+      }
+
+      if (e.target.closest('#scen-sync-current')) {
+        const ind = state.scenarioIndustry;
+        if (state.scenarios[ind] && state.scenarios[ind][0]) {
+          state.scenarios[ind][0].inputs = JSON.parse(JSON.stringify(state[ind]));
+          saveState();
+          render();
+          showToast('Base Case synced from current calculator');
+        }
+        return;
+      }
+
+      if (e.target.closest('#scen-restore-defaults')) {
+        state.scenarios[state.scenarioIndustry] = buildDefaultScenarios()[state.scenarioIndustry];
+        saveState();
+        render();
+        showToast('Scenario defaults restored');
+        return;
+      }
+
+      const advInd = e.target.closest('[data-adv-ind]');
+      if (advInd) { state.advisorIndustry = advInd.dataset.advInd; saveState(); render(); return; }
+
+      const whatIfBtn = e.target.closest('[data-whatif]');
+      if (whatIfBtn) { state.activeWhatIf = whatIfBtn.dataset.whatif; saveState(); render(); return; }
+
+      const glossTab = e.target.closest('[data-gloss-tab]');
+      if (glossTab) { state.glossaryTab = glossTab.dataset.glossTab; render(); return; }
+
+      if (e.target.closest('#export-json-btn')) {
+        const blob = new Blob([JSON.stringify(state, null, 2)], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'unitwise-ai-workspace-backup.json';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        showToast('Workspace JSON downloaded');
+        return;
+      }
+
+      if (e.target.closest('#reset-all-workspace-btn')) {
+        openConfirmModal('Reset Entire Workspace?', 'This will restore all three calculators, scenarios, and settings to the original sample defaults.', () => {
+          state = getDefaultState();
+          saveState();
+          render();
+          showToast('Workspace reset to sample defaults');
+        });
+      }
+    });
+
+    // Live input updates (preserve cursor focus cleanly on change/input)
+    let inputDebounce = null;
+    pageEl.addEventListener('input', e => {
+      const target = e.target;
+      if (target.id === 'glossary-search-input') {
+        state.glossarySearch = target.value;
+        const pos = target.selectionStart;
+        render();
+        const el = document.getElementById('glossary-search-input');
+        if (el) { el.focus(); el.setSelectionRange(pos, pos); }
+        return;
+      }
+      if (target.id === 'setting-period') {
+        state.settings.reportingPeriod = target.value;
+        saveState();
+        return;
+      }
+      if (target.dataset.scenRename) {
+        const sc = (state.scenarios[state.scenarioIndustry] || []).find(x => x.id === target.dataset.scenRename);
+        if (sc) {
+          sc.name = target.value;
+          saveState();
+        }
+        return;
+      }
+      if (target.dataset.model && target.dataset.field) {
+        if (target.type === 'checkbox') return; // handled in change
+        const model = target.dataset.model;
+        const field = target.dataset.field;
+        const val = target.tagName === 'SELECT' ? target.value : Math.max(0, Number(target.value) || 0);
+        state[model][field] = val;
+        saveState();
+        clearTimeout(inputDebounce);
+        inputDebounce = setTimeout(() => {
+          const activeField = field;
+          const activeModel = model;
+          render();
+          const refocus = pageEl.querySelector(`[data-model="${activeModel}"][data-field="${activeField}"]`);
+          if (refocus && refocus.tagName === 'INPUT') {
+            refocus.focus();
+          }
+        }, 280);
+        return;
+      }
+      if (target.dataset.scenId && target.dataset.scenField) {
+        const scId = target.dataset.scenId;
+        const scField = target.dataset.scenField;
+        const sc = (state.scenarios[state.scenarioIndustry] || []).find(x => x.id === scId);
+        if (sc) {
+          sc.inputs[scField] = Math.max(0, Number(target.value) || 0);
+          saveState();
+          clearTimeout(inputDebounce);
+          inputDebounce = setTimeout(() => {
+            render();
+            const refocus = pageEl.querySelector(`[data-scen-id="${scId}"][data-scen-field="${scField}"]`);
+            if (refocus) refocus.focus();
+          }, 280);
+        }
+      }
+    });
+
+    pageEl.addEventListener('change', e => {
+      const target = e.target;
+      if (target.dataset.model && target.dataset.field) {
+        const model = target.dataset.model;
+        const field = target.dataset.field;
+        if (target.type === 'checkbox') {
+          state[model][field] = target.checked;
+        } else if (target.tagName === 'SELECT') {
+          state[model][field] = target.value;
+        }
+        saveState();
+        render();
+      } else if (target.dataset.scenRename) {
+        render();
+      }
+    });
+
+    // Initial render
+    render();
+  })();
+  </script>
+</body>
+</html>
