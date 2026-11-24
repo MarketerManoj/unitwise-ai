@@ -43,6 +43,19 @@
       box-shadow: 0 4px 12px rgba(15, 23, 42, 0.18); text-align: left;
     }
     .tooltip-wrap:hover .tooltip-box, .tooltip-wrap:focus-within .tooltip-box { visibility: visible; opacity: 1; }
+    input[type="range"].cac-slider {
+      -webkit-appearance: none; appearance: none; width: 100%; height: 6px;
+      border-radius: 9999px; background: #E2E8F0; outline: none; cursor: pointer;
+    }
+    input[type="range"].cac-slider::-webkit-slider-thumb {
+      -webkit-appearance: none; appearance: none; width: 18px; height: 18px;
+      border-radius: 9999px; background: #047857; border: 2px solid #FFFFFF;
+      box-shadow: 0 1px 4px rgba(4, 120, 87, 0.35); cursor: pointer;
+    }
+    input[type="range"].cac-slider::-moz-range-thumb {
+      width: 18px; height: 18px; border-radius: 9999px; background: #047857;
+      border: 2px solid #FFFFFF; box-shadow: 0 1px 4px rgba(4, 120, 87, 0.35); cursor: pointer;
+    }
     @media print {
       #sidebar, #mobile-drawer, #topbar, .no-print { display: none !important; }
       #main-wrapper { margin-left: 0 !important; padding: 0 !important; }
@@ -911,6 +924,10 @@
         travel: JSON.parse(JSON.stringify(E.DEFAULT_TRAVEL_INPUTS)),
         scenarios: buildDefaultScenarios(),
         scenarioIndustry: 'education',
+        scenAdvisorCacPct: 20,
+        scenAdvisorOpenAcq: true,
+        scenAdvisorOpenFocus: true,
+        scenAdvisorTargetId: null,
         advisorIndustry: 'education',
         activeWhatIf: 'cac_up_20',
         glossarySearch: '',
@@ -937,6 +954,10 @@
           travel: Object.assign({}, def.travel, parsed.travel || {}),
           scenarios: parsed.scenarios && parsed.scenarios.education ? parsed.scenarios : def.scenarios,
           scenarioIndustry: parsed.scenarioIndustry || 'education',
+          scenAdvisorCacPct: parsed.scenAdvisorCacPct !== undefined ? parsed.scenAdvisorCacPct : 20,
+          scenAdvisorOpenAcq: parsed.scenAdvisorOpenAcq !== undefined ? parsed.scenAdvisorOpenAcq : true,
+          scenAdvisorOpenFocus: parsed.scenAdvisorOpenFocus !== undefined ? parsed.scenAdvisorOpenFocus : true,
+          scenAdvisorTargetId: parsed.scenAdvisorTargetId || null,
           advisorIndustry: parsed.advisorIndustry || 'education',
           activeWhatIf: parsed.activeWhatIf || 'cac_up_20',
           glossarySearch: '',
@@ -2159,6 +2180,117 @@
         { label: 'Break-even Units', fn: c => c.breakEven.achievable ? (E.formatCount(c.breakEven.units) + ' ' + c.unitLabelPlural) : 'Not Achievable' }
       ];
 
+      // Build Business Advisor (Rule-based insights) card for the selected scenario
+      const activeScenObj = results.find(r => r.id === state.scenAdvisorTargetId) || results[0];
+      const scCalc = activeScenObj ? activeScenObj.calc : calcByIndustry(ind, state[ind]);
+      const scInp = activeScenObj ? activeScenObj.inputs : state[ind];
+      const cacDeltaPct = Number(state.scenAdvisorCacPct || 0);
+      const cacAdSpend = E.safeNum(scInp.totalAdSpend, 0);
+
+      // Compute deterministic CAC sensitivity at unchanged paying volume
+      const simInp = Object.assign({}, scInp, { totalAdSpend: Math.max(0, cacAdSpend * (1 + cacDeltaPct / 100)) });
+      const simCalc = calcByIndustry(ind, simInp);
+      const simCacDisplay = cacAdSpend > 0 ? E.formatINR(simCalc.marketingCac) : '₹0';
+      const simProfitDisplay = E.formatINR(simCalc.operatingProfit);
+      const simProfitDiff = simCalc.operatingProfit - scCalc.operatingProfit;
+
+      // Compute 20% ad spend reduction impact at unchanged volume
+      const adRedInp = Object.assign({}, scInp, { totalAdSpend: Math.max(0, cacAdSpend * 0.8) });
+      const adRedCalc = calcByIndustry(ind, adRedInp);
+      const adRedGain = adRedCalc.operatingProfit - scCalc.operatingProfit;
+
+      const topExp = scCalc.expenseCategories.slice().sort((a, b) => b.amount - a.amount)[0];
+      const topExpText = topExp && topExp.amount > 0
+        ? topExp.label + ' is your largest expense at ' + E.formatINR(topExp.amount) + '.'
+        : 'No operating expenses are currently entered.';
+
+      const summaryHeadline = scCalc.operatingProfit >= 0
+        ? 'Your business generates ' + E.formatINR(scCalc.operatingProfit) + ' in operating profit at a ' + E.formatPct(scCalc.profitMarginPct) + ' margin. ' + topExpText
+        : 'Your business is operating at a loss of ' + E.formatINR(Math.abs(scCalc.operatingProfit)) + ' (' + E.formatPct(scCalc.profitMarginPct) + ' margin). ' + topExpText;
+
+      const cacBadgeText = cacAdSpend > 0
+        ? 'Marketing CAC: ' + E.formatINR(scCalc.marketingCac) + ' per ' + scCalc.unitLabel
+        : 'Add advertising spend to evaluate CAC';
+
+      const cacReadoutText = cacAdSpend > 0
+        ? 'At unchanged paying volume, CAC would be ' + simCacDisplay + ' and operating profit would be ' + simProfitDisplay + ' (' + (simProfitDiff >= 0 ? '+' : '') + E.formatINR(simProfitDiff) + ' vs. ' + E.formatINR(scCalc.operatingProfit) + '). These are deterministic illustrations, not forecasts.'
+        : 'At unchanged paying volume, CAC would be ₹0 and operating profit would be ' + simProfitDisplay + '. No advertising spend is entered, so this change has no impact. These are deterministic illustrations, not forecasts.';
+
+      const focusText = (scCalc.contributionPerUnit !== null && scCalc.contributionPerUnit <= 0
+        ? 'Restore positive contribution per ' + scCalc.unitLabel + ' before scaling spend. '
+        : 'Protect contribution as you grow. ') +
+        'Review your largest costs and test changes in Scenario Analysis before making a commitment. A 20% advertising reduction would improve profit by ' +
+        (cacAdSpend > 0 ? E.formatINR(adRedGain) : '₹0') + ', assuming unchanged paying volume.';
+
+      const sliderPctFill = ((cacDeltaPct - (-50)) / (100 - (-50))) * 100;
+      const cacSignLabel = (cacDeltaPct > 0 ? '+' : '') + cacDeltaPct + '%';
+
+      const scenarioAdvisorCardHtml = `
+        <div class="rounded-2xl border border-emerald-200/80 bg-[#EBF8F2] p-5 sm:p-6 space-y-4 shadow-sm">
+          <div class="flex flex-col sm:flex-row sm:items-start justify-between gap-3">
+            <div class="flex items-start gap-3.5">
+              <div class="w-10 h-10 rounded-xl bg-white border border-emerald-100 shadow-sm flex items-center justify-center text-emerald-700 shrink-0">
+                <i data-lucide="sparkles" class="w-5 h-5"></i>
+              </div>
+              <div class="space-y-1.5">
+                <div class="flex flex-wrap items-center gap-2">
+                  <h2 class="text-base sm:text-lg font-bold text-emerald-800">Business advisor</h2>
+                  <span class="px-2.5 py-0.5 rounded-md text-xs font-medium text-emerald-700 bg-white/70 border border-emerald-200">Rule-based insights</span>
+                </div>
+                <p class="text-sm text-slate-800 leading-relaxed">${escapeHtml(summaryHeadline)}</p>
+                <div class="flex flex-wrap items-center gap-4 pt-1 text-xs sm:text-sm font-medium text-emerald-700">
+                  <span class="inline-flex items-center gap-1.5">
+                    <i data-lucide="trending-up" class="w-4 h-4"></i>
+                    <span>${E.formatINR(scCalc.contributionPerUnit)} contribution per ${escapeHtml(scCalc.unitLabel)}</span>
+                  </span>
+                  <span class="inline-flex items-center gap-1.5">
+                    <i data-lucide="target" class="w-4 h-4"></i>
+                    <span>${escapeHtml(cacBadgeText)}</span>
+                  </span>
+                </div>
+              </div>
+            </div>
+            <div class="flex items-center gap-1.5 shrink-0 self-start sm:self-auto">
+              ${results.map(r => `
+                <button data-scen-adv-target="${r.id}" class="px-2.5 py-1 rounded-md text-xs font-medium transition-colors ${activeScenObj && activeScenObj.id === r.id ? 'bg-emerald-700 text-white' : 'bg-white/75 text-emerald-800 border border-emerald-200 hover:bg-white'}">${escapeHtml(r.name)}</button>
+              `).join('')}
+            </div>
+          </div>
+
+          <!-- Collapsible 1: What happens if acquisition costs change? -->
+          <div class="pl-0 sm:pl-14 space-y-2.5">
+            <button data-toggle-scen-adv="acq" class="inline-flex items-center gap-1.5 text-sm font-semibold text-emerald-800 hover:text-emerald-900">
+              <span class="text-xs">${state.scenAdvisorOpenAcq ? '▼' : '▶'}</span>
+              <span>What happens if acquisition costs change?</span>
+            </button>
+            ${state.scenAdvisorOpenAcq ? `
+              <div class="space-y-2 pt-1">
+                <div class="flex items-center justify-between text-xs sm:text-sm">
+                  <span class="font-medium text-emerald-800">CAC change</span>
+                  <span id="scen-cac-pct-label" class="font-bold text-emerald-800">${cacSignLabel}</span>
+                </div>
+                <input id="scen-cac-slider" type="range" min="-50" max="100" step="5" value="${cacDeltaPct}"
+                  class="cac-slider"
+                  style="background: linear-gradient(to right, #047857 0%, #047857 ${sliderPctFill}%, #E2E8F0 ${sliderPctFill}%, #E2E8F0 100%);"
+                  aria-label="CAC change percentage" />
+                <p id="scen-cac-readout" class="text-xs sm:text-sm text-slate-600 leading-relaxed">${escapeHtml(cacReadoutText)}</p>
+              </div>
+            ` : ''}
+          </div>
+
+          <!-- Collapsible 2: What should I focus on? -->
+          <div class="pl-0 sm:pl-14 space-y-1.5">
+            <button data-toggle-scen-adv="focus" class="inline-flex items-center gap-1.5 text-sm font-semibold text-emerald-800 hover:text-emerald-900">
+              <span class="text-xs">${state.scenAdvisorOpenFocus ? '▼' : '▶'}</span>
+              <span>What should I focus on?</span>
+            </button>
+            ${state.scenAdvisorOpenFocus ? `
+              <p class="text-xs sm:text-sm text-slate-600 leading-relaxed pt-0.5">${escapeHtml(focusText)}</p>
+            ` : ''}
+          </div>
+        </div>
+      `;
+
       document.getElementById('page-content').innerHTML = `
         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div class="inline-flex rounded-lg border border-slate-200 bg-white p-1 shadow-sm">
@@ -2218,6 +2350,8 @@
             <div class="relative h-64"><canvas id="chart-scenario-margin"></canvas></div>
           </div>
         </div>
+
+        ${scenarioAdvisorCardHtml}
       `;
       renderScenarioCharts(results);
     }
@@ -2659,6 +2793,18 @@
       const printBtn = e.target.closest('[data-print-report]');
       if (printBtn) { window.print(); return; }
 
+      const scenAdvTarget = e.target.closest('[data-scen-adv-target]');
+      if (scenAdvTarget) { state.scenAdvisorTargetId = scenAdvTarget.dataset.scenAdvTarget; saveState(); render(); return; }
+
+      const toggleScenAdv = e.target.closest('[data-toggle-scen-adv]');
+      if (toggleScenAdv) {
+        if (toggleScenAdv.dataset.toggleScenAdv === 'acq') state.scenAdvisorOpenAcq = !state.scenAdvisorOpenAcq;
+        else state.scenAdvisorOpenFocus = !state.scenAdvisorOpenFocus;
+        saveState();
+        render();
+        return;
+      }
+
       const scenInd = e.target.closest('[data-scen-ind]');
       if (scenInd) { state.scenarioIndustry = scenInd.dataset.scenInd; saveState(); render(); return; }
 
@@ -2743,6 +2889,31 @@
     let inputDebounce = null;
     pageEl.addEventListener('input', e => {
       const target = e.target;
+      if (target.id === 'scen-cac-slider') {
+        const pct = Number(target.value) || 0;
+        state.scenAdvisorCacPct = pct;
+        saveState();
+        const fill = ((pct - (-50)) / 150) * 100;
+        target.style.background = `linear-gradient(to right, #047857 0%, #047857 ${fill}%, #E2E8F0 ${fill}%, #E2E8F0 100%)`;
+        const lbl = document.getElementById('scen-cac-pct-label');
+        if (lbl) lbl.textContent = (pct > 0 ? '+' : '') + pct + '%';
+        const ind = state.scenarioIndustry;
+        const list = state.scenarios[ind] || [];
+        const scObj = list.find(x => x.id === state.scenAdvisorTargetId) || list[0];
+        if (scObj) {
+          const baseC = calcByIndustry(ind, scObj.inputs);
+          const adSpend = E.safeNum(scObj.inputs.totalAdSpend, 0);
+          const simC = calcByIndustry(ind, Object.assign({}, scObj.inputs, { totalAdSpend: Math.max(0, adSpend * (1 + pct / 100)) }));
+          const diff = simC.operatingProfit - baseC.operatingProfit;
+          const ro = document.getElementById('scen-cac-readout');
+          if (ro) {
+            ro.textContent = adSpend > 0
+              ? 'At unchanged paying volume, CAC would be ' + E.formatINR(simC.marketingCac) + ' and operating profit would be ' + E.formatINR(simC.operatingProfit) + ' (' + (diff >= 0 ? '+' : '') + E.formatINR(diff) + ' vs. ' + E.formatINR(baseC.operatingProfit) + '). These are deterministic illustrations, not forecasts.'
+              : 'At unchanged paying volume, CAC would be ₹0 and operating profit would be ' + E.formatINR(simC.operatingProfit) + '. No advertising spend is entered, so this change has no impact. These are deterministic illustrations, not forecasts.';
+          }
+        }
+        return;
+      }
       if (target.id === 'glossary-search-input') {
         state.glossarySearch = target.value;
         const pos = target.selectionStart;
